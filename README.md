@@ -1,2 +1,3 @@
-# TetriC
- TetriC: A Tetris clone written in C
+# TetriC: A Tetris clone written in C
+
+Currently nothing is implemeted yet :)
