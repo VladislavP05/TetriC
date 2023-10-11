@@ -25,6 +25,8 @@ OBJECTS=$(patsubst %.c,$(BIN)/%.o,$(notdir $(CFILES)))
 # Creates .d dependencies from .c files (headers)
 DEPFILES=$(patsubst %.c,$(BIN)/%.d,$(notdir $(CFILES)))
 
+all: linux windows
+
 # Rule for building linux binary
 linux: $(OBJECTS)
 	$(CC) -o $(PROGRAM).bin $^ $(SDLFLAGS)
@@ -42,6 +44,7 @@ $(BIN)/%.o: src/common/%.c
 	$(CC) $(CFLAGS) -c -o $@ $<
 
 # Rule for cleaning the bin directory
+.PHONY: clean
 clean:
 	rm -rf $(PROGRAM).bin $(PROGRAM).exe $(OBJECTS) $(DEPFILES)
 

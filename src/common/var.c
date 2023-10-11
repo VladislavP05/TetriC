@@ -4,6 +4,10 @@
 
 #include "../include/var.h"
 
-uint8_t game_closed = FALSE;
+bool game_closed = false;
 
-game_t game = {.renderer=NULL, .window=NULL};
+GAME_t game = {.renderer=NULL, .window=NULL};
+
+BLOCK_t playing_field[20][10];
+
+float delta_time = 0.0;

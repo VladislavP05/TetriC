@@ -2,6 +2,7 @@
 
 // Creates, edits and adds entries to the program log file
 
+#include <stdio.h>
 #include <time.h>
 
 #include "../include/log.h"
@@ -20,8 +21,8 @@ extern void upadate_log_time(void)
 
 }
 
-// Writes a message to the log file
-extern void write_log(const char *message)
+// Writes a message to the log file or console
+extern void write_log(const char *message, int flags)
 {
-
+   
 }

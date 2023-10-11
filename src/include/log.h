@@ -1,1 +1,8 @@
 #pragma once
+
+#define LOG_OUT_CONSOLE 0b0001
+#define LOG_OUT_FILE 0b0010
+#define LOG_OUT_BOTH 0b0011
+#define LOG_TYPE_INF 0b0100
+#define LOG_TYPE_WRN 0b1000
+#define LOG_TYPE_ERR 0b1100

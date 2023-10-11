@@ -17,7 +17,7 @@ extern void handle_input(void)
         {
         case SDL_QUIT:
 
-            game_closed = 1;
+            game_closed = true;
             break;
         
         default:
