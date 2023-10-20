@@ -5,8 +5,6 @@
 #include "include/var.h"
 #include "include/input.h"
 
-
-// Main event loop
 extern void handle_input(void)
 {
     SDL_Event event;
@@ -15,13 +13,13 @@ extern void handle_input(void)
     {
         switch (event.type)
         {
-        case SDL_QUIT:
+            case SDL_QUIT:
 
             game_closed = true;
-            break;
+                break;
         
-        default:
-            break;
+            default:
+                break;
         }
     }
 }

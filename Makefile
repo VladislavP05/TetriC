@@ -29,7 +29,7 @@ all: linux windows
 
 # Rule for building linux binary
 linux: $(OBJECTS)
-	$(CC) -o $(PROGRAM).bin $^ $(SDLFLAGS)
+	$(CC) -o $(PROGRAM) $^ $(SDLFLAGS)
 
 # Rule for building windows binary
 windows: $(OBJECTS)
@@ -46,7 +46,7 @@ $(BIN)/%.o: src/common/%.c
 # Rule for cleaning the bin directory
 .PHONY: clean
 clean:
-	rm -rf $(PROGRAM).bin $(PROGRAM).exe $(OBJECTS) $(DEPFILES)
+	rm -rf $(PROGRAM).bin $(PROGRAM).exe $(BIN)/*.log $(OBJECTS) $(DEPFILES)
 
 # Including the header dependencies
 -include $(DEPFILES)

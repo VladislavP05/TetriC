@@ -10,7 +10,7 @@
 
 #define PLAYING_FIELD_WIDTH 300
 #define PLAYING_FIELD_HEIGHT 500
-#define BLOCK_SIZE (PLAYING_FIELD_HEIGHT / 20)
+#define BLOCK_SIZE (PLAYING_FIELD_HEIGHT / 20)          // Size of playing field blocks
 
 typedef struct
 {
@@ -37,11 +37,11 @@ typedef struct
 }
 BLOCK_t;
 
-extern GAME_t game;
+extern GAME_t game;                 // Currently stores the window and renderer pointers
 
-extern bool game_closed;
+extern bool game_closed;            // True when game is running and set to false when SDL_Quit event is called
 
-extern float delta_time;
+extern float delta_time;            // Time since last frame rendered
 
-extern BLOCK_t playing_field[20][10];
+extern BLOCK_t playing_field[22][12];   // Block array
 

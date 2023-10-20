@@ -4,22 +4,29 @@
 // initializes and keeps in sync all functions.
 
 #include "include/var.h"
+#include "include/util.h"
+#include "include/log.h"
 #include "include/tetric.h"
 #include "include/input.h"
 #include "include/output.h"
+#include "include/game.h"
 
-#define FPS 75
-#define TARGET_FRAME_TIME (1000 / FPS)
+#define FPS 75          // Target frames per second
+#define TARGET_FRAME_TIME (1000 / FPS)          // Time between each frame
 
 int main(void)
 {
-    initialize_SDL();
+    initialize_resources();
 
     while (!game_closed)
     {
         update_frame_time();
 
+        upadate_log_time();
+
         handle_input();
+
+        tick_logic();
 
         render_frame();
     }
@@ -35,7 +42,9 @@ static void update_frame_time(void)
 
     uint32_t frame_delay = TARGET_FRAME_TIME - (SDL_GetTicks() - frame_time);
 
-    if (frame_delay > 0 && frame_delay < TARGET_FRAME_TIME)
+    printf("Frame delay: %u\n", frame_delay);
+
+    if (frame_delay > 0 && frame_delay <= TARGET_FRAME_TIME)
     {
         SDL_Delay(frame_delay);
     }
@@ -45,22 +54,26 @@ static void update_frame_time(void)
     frame_time = SDL_GetTicks();
 }
 
-// Initializes all program subsystems and file variables
-static void initialize_SDL(void)
+static void initialize_resources(void)
 {
+    init_log();
+
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS | SDL_INIT_TIMER))
     {
-        fprintf(stderr, "ERR: Error initializeing SDL - %s\n", SDL_GetError());
+        write_log(SDL_GetError(), LOG_OUT_BOTH | LOG_TYPE_ERR);
         exit(1);
     }
 
     init_SDL_video();
+
+    start_game();
 }
 
-// Unloads all program subsystems and resources
 static void unload_resources(void)
 {
     unload_SDL_video();
 
     SDL_Quit();
+
+    unload_log();
 }
