@@ -5,6 +5,12 @@
 #include "include/var.h"
 #include "include/output.h"
 #include "include/log.h"
+#include "include/game.h"
+
+#define PLAYING_FIELD_WIDTH 300
+#define PLAYING_FIELD_HEIGHT 500
+#define BLOCK_SIZE (PLAYING_FIELD_HEIGHT / 20)          // Size of playing field blocks
+#define BLOCK_PADDING 3
 
 static void render_block_array(const uint16_t field_x, const uint16_t field_y)
 {
@@ -12,16 +18,19 @@ static void render_block_array(const uint16_t field_x, const uint16_t field_y)
 
     SDL_SetRenderDrawColor(game.renderer, 255, 255, 255, 255);
 
-    for (int i = 0; i < 22; i++)
+    for (int i = 2; i < 22; i++)
     {
         for (int j = 0; j < 12; j++)
         {
-            if (!playing_field[i][j].is_block) {continue;}
+            if (!playing_field[i][j].is_block)
+            {
+                continue;
+            }
 
             SDL_Rect block_rect = 
             {
-            .h = BLOCK_SIZE - 1,
-            .w = BLOCK_SIZE - 1,
+            .h = BLOCK_SIZE - BLOCK_PADDING,
+            .w = BLOCK_SIZE - BLOCK_PADDING,
             .x = field_x + (j * BLOCK_SIZE),
             .y = field_y + i * BLOCK_SIZE - BLOCK_SIZE * 2
             };

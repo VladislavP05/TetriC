@@ -52,8 +52,7 @@ Mkfile.old
 dkms.conf
 
 .vscode/
-.bin
-.log
+*.log
 
 
 bin/Tetric

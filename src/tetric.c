@@ -18,7 +18,7 @@ int main(void)
 {
     initialize_resources();
 
-    while (!game_closed)
+    while (!game.is_closed)
     {
         update_frame_time();
 
@@ -49,8 +49,6 @@ static void update_frame_time(void)
         SDL_Delay(frame_delay);
     }
 
-    delta_time = (SDL_GetTicks() - frame_time) / 1000.0f;
-
     frame_time = SDL_GetTicks();
 }
 
@@ -65,15 +63,12 @@ static void initialize_resources(void)
     }
 
     init_SDL_video();
-
     start_game();
 }
 
 static void unload_resources(void)
 {
     unload_SDL_video();
-
     SDL_Quit();
-
     unload_log();
 }

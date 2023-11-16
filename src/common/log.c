@@ -25,8 +25,7 @@ extern void upadate_log_time(void)
 
 extern void write_log(const char *message, int flags)
 {
-    assert(message);
-    assert(flags);
+    assert(message && flags);
 
     char msg_type[4];
 
