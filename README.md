@@ -2,10 +2,10 @@
 
 This is a personal project to make a Tetris clone entirely in C using the SDL2 library.
 
-# How To Compile
+## How To Compile
 
 All source code was written with linux in mind but it should be able to compile on Windows aswell. The only requirements are that you have installed and set up SDL2 on your PC.
-Provided with the source code is also a Makefile which you should set to your preferred compiler and set with the according flags.
+Provided with the source code is also a Makefile which you should set to your preferred compiler and change the flags as needed.
 
 ### File Structure
 
@@ -18,11 +18,10 @@ Provided with the source code is also a Makefile which you should set to your pr
 ### Source Files
 
 - tetric.c - This is the main source file and the entry to the program. It intializes the SDL subsystems, starts the game, controls the fps and unloads all resources when quiting.
-- input.c - Handles all events in the program...
-- output.c - Handles all rendering in the program...
-- game.c - Handeles all game logic...
+- output.c - Creates the game window and renderer, renders the current frame and unloads video resources when quitting the game.
+- game.c - Contains the game logic and events and defines structs for holding block info.
+- input.c - Takes care of event handling and game controls.
+- var.c - Holds all common global varibles and structs.
+- util.c - Defines common functions used in the program.
+- log.c - Initializes the logging system when starting the program. When initalized provides functions for outputing a formated string with the current time and a custom message to file and/or console.
 - text.c - Currently not implemented...
-- var.c - Holds all global varibles and structs...
-- util.c - Defines common functions used in the program...
-- log.c - Handles logging...
-
