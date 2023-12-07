@@ -2,6 +2,12 @@
 
 This is a personal project to make a Tetris clone entirely in C using the SDL2 library.
 
+## Controls
+
+- A/D - Move the active piece to the left/right
+- (Not Implemented) Q/R - Rotate the active piece clockwise/contra-clockwise
+- (Not Implemented) S - Increase the falling speed of the active piece 
+
 ## How To Compile
 
 All source code was written with linux in mind but it should be able to compile on Windows aswell. The only requirements are that you have installed and set up SDL2 on your PC.
@@ -11,8 +17,8 @@ Provided with the source code is also a Makefile which you should set to your pr
 
 - /bin - This is the binary folder. When compiling the source code all .o, .d and executable files will be stored here.
 - /bin/images - Placeholder. Here will be stored all game textures.
-- /src - Here are stored all the source code files.
-- /src/common - Has source code that defines common functions and variables across the program.
+- /src - This is the source files location.
+- /src/common - Contains the program library source files.
 - /src/include - Contains all .h files.
 
 ### Source Files
