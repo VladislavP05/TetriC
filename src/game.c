@@ -26,16 +26,15 @@ static void move_active_piece(active_piece_t *this, uint8_t direction)
             write_log("Active piece move function called with argument NONE.", LOG_OUT_FILE | LOG_TYPE_WRN);
             break;
 
-        case (DOWN): 
+        case (DOWN):
 
             for (int y_offset = 1; y_offset >= -1; y_offset--)
             {
                 for (int x_offset = -1; x_offset <= 1; x_offset++)
                 {
                     swap(&playing_field[this->cord_y + y_offset][this->cord_x + x_offset],
-                                &playing_field[(this->cord_y + 1) + y_offset][this->cord_x + x_offset],
-                                    sizeof(Block_t));
-                                        
+                            &playing_field[(this->cord_y + 1) + y_offset][this->cord_x + x_offset],
+                                sizeof(Block_t));
                 }
             }
 
@@ -49,9 +48,8 @@ static void move_active_piece(active_piece_t *this, uint8_t direction)
                 for (int x_offset = -1; x_offset <= 1; x_offset++)
                 {
                     swap(&playing_field[this->cord_y + y_offset][this->cord_x + x_offset],
-                                &playing_field[this->cord_y + y_offset][(this->cord_x - 1) + x_offset],
-                                    sizeof(Block_t));
-                                        
+                            &playing_field[this->cord_y + y_offset][(this->cord_x - 1) + x_offset],
+                                sizeof(Block_t));
                 }
             }
 
@@ -65,9 +63,8 @@ static void move_active_piece(active_piece_t *this, uint8_t direction)
                 for (int x_offset = 1; x_offset >= -1; x_offset--)
                 {
                     swap(&playing_field[this->cord_y + y_offset][this->cord_x + x_offset],
-                                &playing_field[this->cord_y + y_offset][(this->cord_x + 1) + x_offset],
-                                    sizeof(Block_t));
-                                        
+                            &playing_field[this->cord_y + y_offset][(this->cord_x + 1) + x_offset],
+                                sizeof(Block_t));
                 }
             }
 
@@ -87,6 +84,7 @@ static void init_active_piece(active_piece_t *this, const uint8_t active_piece_n
     this->curr_move_direcrion = NONE;
     this->move = move_active_piece;
     this->next_piece = malloc(sizeof(active_piece_t));
+    init_active_piece(this->next_piece, active_piece_num++);
 }
 
 Block_t playing_field[22][12];

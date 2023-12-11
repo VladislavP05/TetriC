@@ -5,6 +5,7 @@
 #include <assert.h>
 #include <string.h>
 #include <stdio.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <time.h>
 
@@ -23,7 +24,7 @@ extern void upadate_log_time(void)
     return;
 }
 
-extern void write_log(const char *message, int flags)
+extern uint8_t write_log(const char *message, int flags)
 {
     assert(message && flags);
 
@@ -60,31 +61,51 @@ extern void write_log(const char *message, int flags)
     {
         case LOG_OUT_CONSOLE:
         {
-            fprintf(stdout, "%s - %s: %s\n", log_time, msg_type, message);
+            if (fprintf(stdout, "%s - %s: %s\n", log_time, msg_type, message) < 0)
+            {
+                fprintf(stderr, "Writing to Console failed!\n");
+                goto FAIL;
+            }
             break;
         }
 
         case LOG_OUT_FILE:
         {
-            fprintf(log_file, "%s - %s: %s\n", log_time, msg_type, message);
+            if (fprintf(log_file, "%s - %s: %s\n", log_time, msg_type, message) < 0)
+            {
+                fprintf(stderr, "Writing to File failed!\n");
+                goto FAIL;
+            }
             break;
         }
 
         case LOG_OUT_BOTH:
         {
-            fprintf(stdout, "%s - %s: %s\n", log_time, msg_type, message);
-            fprintf(log_file, "%s - %s: %s\n", log_time, msg_type, message);
+            if (fprintf(stdout, "%s - %s: %s\n", log_time, msg_type, message) < 0)
+            {
+                fprintf(stderr, "Writing to Console failed!\n");
+                goto FAIL;
+            }
+            if (fprintf(log_file, "%s - %s: %s\n", log_time, msg_type, message) < 0)
+            {
+                fprintf(stderr, "Writing to File failed\n");
+                goto FAIL;
+            }
             break;
         }
 
         default:
         {
-            fprintf(stderr, "Unknown Log Output! Please fix!\n");
-            exit(1);
+            fprintf(stderr, "Unknown Log Output!\n");
+            goto FAIL;
         }
     }
 
-    return;
+    return 0;
+
+FAIL:
+    unload_log();
+    return 1;
 }
 
 extern void unload_log(void)
