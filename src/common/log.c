@@ -24,7 +24,7 @@ extern void upadate_log_time(void)
     return;
 }
 
-extern uint8_t write_log(const char *message, int flags)
+extern void write_log(const char *message, int flags)
 {
     assert(message && flags);
 
@@ -52,7 +52,7 @@ extern uint8_t write_log(const char *message, int flags)
 
         default:
         {
-            fprintf(stderr, "Unknown Log Type! Please fix!\n");
+            fprintf(stderr, "Unknown Log Type!\n");
             exit(1);
         }
     }
@@ -64,7 +64,7 @@ extern uint8_t write_log(const char *message, int flags)
             if (fprintf(stdout, "%s - %s: %s\n", log_time, msg_type, message) < 0)
             {
                 fprintf(stderr, "Writing to Console failed!\n");
-                goto FAIL;
+                exit(1);
             }
             break;
         }
@@ -74,7 +74,7 @@ extern uint8_t write_log(const char *message, int flags)
             if (fprintf(log_file, "%s - %s: %s\n", log_time, msg_type, message) < 0)
             {
                 fprintf(stderr, "Writing to File failed!\n");
-                goto FAIL;
+                exit(1);
             }
             break;
         }
@@ -84,12 +84,12 @@ extern uint8_t write_log(const char *message, int flags)
             if (fprintf(stdout, "%s - %s: %s\n", log_time, msg_type, message) < 0)
             {
                 fprintf(stderr, "Writing to Console failed!\n");
-                goto FAIL;
+                exit(1);
             }
             if (fprintf(log_file, "%s - %s: %s\n", log_time, msg_type, message) < 0)
             {
                 fprintf(stderr, "Writing to File failed\n");
-                goto FAIL;
+                exit(1);
             }
             break;
         }
@@ -97,15 +97,11 @@ extern uint8_t write_log(const char *message, int flags)
         default:
         {
             fprintf(stderr, "Unknown Log Output!\n");
-            goto FAIL;
+            exit(1);
         }
     }
 
-    return 0;
-
-FAIL:
-    unload_log();
-    return 1;
+    return;
 }
 
 extern void unload_log(void)

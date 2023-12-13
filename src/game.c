@@ -73,7 +73,10 @@ static void move_active_piece(active_piece_t *this, uint8_t direction)
     }
 }
 
-static void init_active_piece(active_piece_t *this, const uint8_t active_piece_num)
+/*
+(UNFINISHED) Initializes the playing field.
+*/
+static void init_active_piece(active_piece_t *this, uint8_t active_piece_num)
 {
     if (active_piece_num >= ACTIVE_PIECE_LIMIT)
     {
@@ -84,7 +87,6 @@ static void init_active_piece(active_piece_t *this, const uint8_t active_piece_n
     this->curr_move_direcrion = NONE;
     this->move = move_active_piece;
     this->next_piece = malloc(sizeof(active_piece_t));
-    init_active_piece(this->next_piece, active_piece_num++);
 }
 
 Block_t playing_field[22][12];

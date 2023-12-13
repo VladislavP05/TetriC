@@ -19,7 +19,7 @@ Parameters:
     message - Text to be used in the log
     flags - Must have an OUT and TYPE flag OR'ed together (example LOG_OUT_CONSOLE | LOG_TYPE_INF). See log.h for flags.
 */
-extern uint8_t write_log(const char *message, int flags);
+extern void write_log(const char *message, int flags);
 
 /*
 (UNFINISHED) Closes the log file stream and unloads any associated resources.

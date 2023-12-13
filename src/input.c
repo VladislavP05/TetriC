@@ -37,9 +37,6 @@ extern void handle_input(void)
                         active_piece.move(&active_piece, RIGHT);
                         break;
                 }
-
-            default:
-                break;
         }
     }
 }

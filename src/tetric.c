@@ -16,6 +16,12 @@
 
 int main(void)
 {
+    if (atexit(&unload_resources))
+    {
+        fprintf(stderr, "Exit function registration failed!\n");
+        return 1;
+    }
+
     initialize_resources();
 
     while (!game.is_closed)
@@ -30,8 +36,6 @@ int main(void)
 
         render_frame();
     }
-
-    unload_resources();
 
     return 0;
 }
