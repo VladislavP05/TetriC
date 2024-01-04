@@ -3,6 +3,8 @@
 // The entry to the program and main interface between all other files. It also
 // initializes and keeps in sync all functions.
 
+#include <time.h>
+
 #include "include/var.h"
 #include "include/util.h"
 #include "include/log.h"
@@ -22,18 +24,15 @@ int main(void)
         return 1;
     }
 
+    srand(time(NULL));
     initialize_resources();
 
     while (!game.is_closed)
     {
         update_frame_time();
-
         upadate_log_time();
-
         handle_input();
-
         tick_logic();
-
         render_frame();
     }
 
@@ -45,8 +44,6 @@ static void update_frame_time(void)
     static uint32_t frame_time;
 
     uint32_t frame_delay = TARGET_FRAME_TIME - (SDL_GetTicks() - frame_time);
-
-    printf("Frame delay: %u\n", frame_delay);
 
     if (frame_delay > 0 && frame_delay <= TARGET_FRAME_TIME)
     {
@@ -72,6 +69,7 @@ static void initialize_resources(void)
 
 static void unload_resources(void)
 {
+    unload_game();
     unload_SDL_video();
     SDL_Quit();
     unload_log();
