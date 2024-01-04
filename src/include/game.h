@@ -1,5 +1,7 @@
 #pragma once
 
+#define FPS 75
+
 typedef enum
 {
     M_NONE,
@@ -42,17 +44,8 @@ active_piece_t;
 extern Block_t playing_field[22][12];
 extern active_piece_t active_piece;
 
-/*
-(UNFINISHED) Increments the game clock and handles game logic. Should be called every frame.
-*/
 extern void tick_logic(void);
 
-/*
-(UNFINISHED) Initializes game logic variables.
-*/
 extern void start_game(void);
 
-/*
-
-*/
 extern void unload_game(void);
