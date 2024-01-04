@@ -1,14 +1,19 @@
 // game.c
 
-// Game logic
+/*
+Initializes the game playing field and piece queue. Defines the piece move, rotation functions and shapes.
+Unloads the piece queue when the exit function is called.
+*/
 #include <stdlib.h>
 #include "include/var.h"
 #include "include/util.h"
 #include "include/game.h"
 #include "include/log.h"
 
+// Size of the piece queue. The default is 3
 #define PIECE_LIMIT 3
 
+// Array containing the available shapes to be chosen during piece creation. The first index is the id of that shape
 static const uint8_t shapes[5][3][3] = 
 {
     {{0, 1, 0}, {0, 1, 0}, {0, 1, 0}},
@@ -18,12 +23,25 @@ static const uint8_t shapes[5][3][3] =
     {{0, 0, 0}, {0, 1, 1}, {0, 1, 1}},
 };
 
+// Game tick counter. Resets every second (ticks % FPS)
 static uint8_t ticks;
+
+// Array containing the next pieces to be spawned. When the spawn_piece function is called, the first piece in the queue
+// gets set as the active piece and removed from the queue, then the queue shifts its elements to i - 1 and initializes the last
+// piece using a random shape from the shapes array.
 static active_piece_t *piece_queue[PIECE_LIMIT];
 
+// Currently moving piece
 active_piece_t active_piece;
+
+// The main game array containing the color and status of all blocks of the field
 Block_t playing_field[22][12];
 
+/*
+Checks if the requested move is valid
+Parameters:
+this - The current active piece
+*/
 static uint8_t check_move(active_piece_t *this)
 {
     assert(this);
@@ -89,6 +107,12 @@ static uint8_t check_move(active_piece_t *this)
     return 0;
 }
 
+/*
+Moves the active piece in the specified direction
+Parameters:
+this - The current active piece
+direction - The direction in which the piece will attempt to move. Use the enumerated values defined in game.h (example M_LEFT).
+*/
 static uint8_t move_piece(active_piece_t *this, uint8_t direction)
 {
     // To be rewriten
@@ -122,10 +146,6 @@ static uint8_t move_piece(active_piece_t *this, uint8_t direction)
                 }
 
                 return 1; //TEST
-                // spawn_next_piece();
-                // active_piece.move = move_piece;
-
-                break;
             }
 
             for (int y_offset = 1; y_offset >= -1; y_offset--)
@@ -188,7 +208,8 @@ static uint8_t move_piece(active_piece_t *this, uint8_t direction)
 }
 
 /*
-(UNFINISHED) Initializes the piece queue using a queue data structure.
+Initializes every piece in the piece_queue and randomly chooses it a shape. Gets called at the start of
+the game and every time a new piece is spawned
 */
 static void populate_piece_queue()
 {
@@ -209,16 +230,17 @@ static void populate_piece_queue()
     }
 }
 
-
+/*
+Gets the first piece in the queue and spawns it at the top of the playing field
+*/
 static void spawn_next_piece()
 {
     // Copies the first piece of the queue into the active piece variable
     memcpy(&active_piece, piece_queue[0], sizeof(active_piece_t));
 
-    // Shifts the pieces of the query 1 index to the left
+    // Shifts the pieces of the query to i - 1
     for (uint8_t i = 0; i < PIECE_LIMIT - 1; i++)
     {
-        // piece_queue[i] = piece_queue[i + 1];
         memcpy(piece_queue[i], piece_queue[i + 1], sizeof(active_piece_t));
     }
     free(piece_queue[PIECE_LIMIT - 1]);
@@ -241,6 +263,9 @@ static void spawn_next_piece()
     }
 }
 
+/*
+Unloads the piece queue at the end of the game
+*/
 static void unload_piece_queue()
 {
     for (uint8_t i = 0; i < PIECE_LIMIT; i++)
@@ -252,13 +277,16 @@ static void unload_piece_queue()
     write_log("Piece queue unloaded", LOG_TYPE_INF | LOG_OUT_FILE);
 }
 
+/*
+Increments the tick counter and handles any game logic this frame
+*/
 extern void tick_logic(void)
 {
     // Test
 
     ticks++;
 
-    if (!(ticks % 75 == 0)) {return;}
+    if (!(ticks % FPS == 0)) {return;}
 
     if (active_piece.move(&active_piece, M_DOWN))
     {
@@ -270,6 +298,9 @@ extern void tick_logic(void)
     return;
 }
 
+/*
+Initializes the playing field and piece queue. Called once at the start
+*/
 extern void start_game(void)
 {
     // Test implementation
@@ -293,6 +324,9 @@ extern void start_game(void)
     spawn_next_piece();
 }
 
+/*
+Calls the unload_piece_queue function, writing a log if it unloads successfully
+*/
 extern void unload_game(void)
 {
     unload_piece_queue();
