@@ -38,7 +38,7 @@ active_piece_t active_piece;
 Block_t playing_field[22][12];
 
 /*
-Checks if the requested move is valid
+Checks if the requested move is valid. Returns a 1 if the move is not allowed
 Parameters:
 this - The current active piece
 */
@@ -67,19 +67,25 @@ static uint8_t check_move(active_piece_t *this)
 
             if (this->cord_x == 0) {return 1;}
 
-            for (int8_t y_offset = -1; y_offset <= 1; y_offset++)
+            uint8_t left_point = 1;
+
+            for (uint8_t y_level = 0; y_level < 3; y_level++)
             {
-                if (this->shape[y_offset + 1][0] == 1 && this->cord_x == 1)
+                if (this->shape[y_level][0] != 1) {continue;}
+
+                left_point = 0;
+                break;
+            }
+
+            if (left_point == 0 && this->cord_x == 1) {return 1;}
+
+            for (int8_t y_offset = -1; y_offset < 2; y_offset++)
+            {
+                if (this->shape[y_offset + 1][left_point] == 1
+                && playing_field[this->cord_y + y_offset][this->cord_x - (2 - left_point)].is_block)
                 {
                     return 1;
                 }
-                else if (this->shape[y_offset + 1][0] == 1 
-                && playing_field[this->cord_y + y_offset][this->cord_x - 2].is_block)
-                {
-                    return 1;
-                }
-                else if (this->shape[y_offset + 1][1] == 1 
-                && playing_field[this->cord_y + y_offset])
             }
 
             break;
@@ -88,14 +94,22 @@ static uint8_t check_move(active_piece_t *this)
 
             if (this->cord_x == 11) {return 1;}
 
-            for (int8_t y_offset = -1; y_offset <= 1; y_offset++)
+            uint8_t right_point = 1;
+
+            for (uint8_t y_level = 0; y_level < 3; y_level++)
             {
-                if (this->shape[y_offset + 1][2] == 1 && this->cord_x == 10)
-                {
-                    return 1;
-                }
-                else if (this->shape[y_offset + 1][2] == 1 
-                && playing_field[this->cord_y + y_offset][this->cord_x + 2].is_block)
+                if (this->shape[y_level][2] != 1) {continue;}
+
+                right_point = 2;
+                break;
+            }
+
+            if (right_point == 2 && this->cord_x == 10) {return 1;}
+
+            for (int8_t y_offset = -1; y_offset < 2; y_offset++)
+            {
+                if (this->shape[y_offset + 1][right_point] == 1
+                && playing_field[this->cord_y + y_offset][this->cord_x + right_point].is_block)
                 {
                     return 1;
                 }
@@ -108,103 +122,97 @@ static uint8_t check_move(active_piece_t *this)
 }
 
 /*
-Moves the active piece in the specified direction
+Moves the piece in the direction assigned to this.move_direction
+Parameters:
+this - The current active piece
+*/
+static void swap_blocks(active_piece_t *this)
+{
+    assert(this);
+
+    int8_t x_direction = 0; 
+    int8_t y_direction = this->move_direction == M_DOWN ? 1 : 0;
+
+    switch (this->move_direction)
+    {
+        case(M_NONE): case(M_DOWN):
+            break;
+
+        case(M_LEFT):
+            x_direction = -1;
+            break;
+
+        case(M_RIGHT):
+            x_direction = 1;
+            break;
+    }
+
+    for (int8_t y_offset = -1; y_offset < 2; y_offset++)
+    {
+        for (int8_t x_offset = -1; x_offset < 2; x_offset++)
+        {
+            if (this->shape[y_offset + 1][x_offset + 1] != 1) {continue;}
+
+            playing_field[this->cord_y + y_offset][this->cord_x + x_offset].is_block = false;
+            playing_field[this->cord_y + y_offset][this->cord_x + x_offset].color = set_color(0, 0, 0, 0);
+        }
+    }
+
+    this->cord_x += x_direction;
+    this->cord_y += y_direction;
+    
+    for (int8_t y_offset = -1; y_offset < 2; y_offset++)
+    {
+        for (int8_t x_offset = -1; x_offset < 2; x_offset++)
+        {
+            if (this->shape[y_offset + 1][x_offset + 1] != 1) {continue;}
+
+            playing_field[this->cord_y + y_offset][this->cord_x + x_offset].is_block = true;
+            playing_field[this->cord_y + y_offset][this->cord_x + x_offset].color = set_color(255, 255, 255, 255); 
+
+        }
+    }
+}
+
+/*
+Calls the check_move and swap_blocks to move the active piece in the specified direction if possible.
+Returns a 1 if the active piece failed to move down.
 Parameters:
 this - The current active piece
 direction - The direction in which the piece will attempt to move. Use the enumerated values defined in game.h (example M_LEFT).
 */
 static uint8_t move_piece(active_piece_t *this, uint8_t direction)
 {
-    // To be rewriten
-
     assert(this);
 
     this->move_direction = direction;
 
-    switch (this->move_direction)
+    if (this->move_direction == M_NONE)
     {
-        case (M_NONE):
-
-            write_log("Active piece move function called with argument NONE", LOG_OUT_FILE | LOG_TYPE_WRN);
-            break;
-
-        case (M_DOWN):
-
-            if (check_move(this))
-            {
-                // TEST
-
-                for (int y_offset = 1; y_offset >= -1; y_offset--)
-                {                
-                    for (int x_offset = -1; x_offset <= 1; x_offset++)
-                    {
-                        if (playing_field[this->cord_y + y_offset][this->cord_x + x_offset].is_block)
-                        {
-                            playing_field[this->cord_y + y_offset][this->cord_x + x_offset].is_static = true;
-                        }
-                    }
-                }
-
-                return 1; //TEST
-            }
-
-            for (int y_offset = 1; y_offset >= -1; y_offset--)
-            {
-                for (int x_offset = -1; x_offset <= 1; x_offset++)
-                {
-                    if (this->shape[y_offset + 1][x_offset + 1] != 1) {continue;}
-
-                    swap(&playing_field[this->cord_y + y_offset][this->cord_x + x_offset],
-                    &playing_field[(this->cord_y + 1) + y_offset][this->cord_x + x_offset],
-                    sizeof(Block_t));
-                }
-            }
-
-            this->cord_y++;
-            break;
-
-        case (M_LEFT):
-
-            if (check_move(this))
-            {
-                break;
-            }
-
-            for (int y_offset = 1; y_offset >= -1; y_offset--)
-            {
-                for (int x_offset = -1; x_offset <= 1; x_offset++)
-                {
-                    swap(&playing_field[this->cord_y + y_offset][this->cord_x + x_offset],
-                    &playing_field[this->cord_y + y_offset][(this->cord_x - 1) + x_offset],
-                    sizeof(Block_t));
-                }
-            }
-
-            this->cord_x--;
-            break;
-
-        case (M_RIGHT):
-
-            if (check_move(this))
-            {
-                break;
-            }
-
-            for (int y_offset = 1; y_offset >= -1; y_offset--)
-            {
-                for (int x_offset = 1; x_offset >= -1; x_offset--)
-                {
-                    swap(&playing_field[this->cord_y + y_offset][this->cord_x + x_offset],
-                    &playing_field[this->cord_y + y_offset][(this->cord_x + 1) + x_offset],
-                    sizeof(Block_t));
-                }
-            }
-
-            this->cord_x++;
-            break;
+        write_log("Active piece move function called with argument NONE", LOG_OUT_FILE | LOG_TYPE_WRN);
+        return 0;
     }
 
-    return 0; //TEST
+    if (!check_move(this))
+    {
+        swap_blocks(this);
+        return 0;
+    }
+
+    if (this->move_direction != M_DOWN) {return 0;}
+
+    for (int8_t y_offset = 1; y_offset >= -1; y_offset--)
+    {                
+        for (int8_t x_offset = -1; x_offset <= 1; x_offset++)
+        {
+            if (playing_field[this->cord_y + y_offset][this->cord_x + x_offset].is_block)
+            {
+                playing_field[this->cord_y + y_offset][this->cord_x + x_offset].is_static = true;
+            }
+        }
+    }
+
+    return 1;
 }
 
 /*
