@@ -5,7 +5,7 @@ This is a personal project to make a Tetris clone entirely in C using the SDL2 l
 ## Controls
 
 - A/D - Move the active piece to the left/right
-- (Not Implemented) Q/R - Rotate the active piece clockwise/contra-clockwise
+- Q/R - Rotate the active piece clockwise/contra-clockwise
 - (Not Implemented) S - Increase the falling speed of the active piece 
 
 ## How To Compile
