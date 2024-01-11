@@ -5,6 +5,7 @@
 #include <assert.h>
 #include <string.h>
 #include <stdio.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <time.h>
 
@@ -51,7 +52,7 @@ extern void write_log(const char *message, int flags)
 
         default:
         {
-            fprintf(stderr, "Unknown Log Type! Please fix!\n");
+            fprintf(stderr, "Unknown Log Type!\n");
             exit(1);
         }
     }
@@ -60,26 +61,42 @@ extern void write_log(const char *message, int flags)
     {
         case LOG_OUT_CONSOLE:
         {
-            fprintf(stdout, "%s - %s: %s\n", log_time, msg_type, message);
+            if (fprintf(stdout, "%s - %s: %s\n", log_time, msg_type, message) < 0)
+            {
+                fprintf(stderr, "Writing to Console failed!\n");
+                exit(1);
+            }
             break;
         }
 
         case LOG_OUT_FILE:
         {
-            fprintf(log_file, "%s - %s: %s\n", log_time, msg_type, message);
+            if (fprintf(log_file, "%s - %s: %s\n", log_time, msg_type, message) < 0)
+            {
+                fprintf(stderr, "Writing to File failed!\n");
+                exit(1);
+            }
             break;
         }
 
         case LOG_OUT_BOTH:
         {
-            fprintf(stdout, "%s - %s: %s\n", log_time, msg_type, message);
-            fprintf(log_file, "%s - %s: %s\n", log_time, msg_type, message);
+            if (fprintf(stdout, "%s - %s: %s\n", log_time, msg_type, message) < 0)
+            {
+                fprintf(stderr, "Writing to Console failed!\n");
+                exit(1);
+            }
+            if (fprintf(log_file, "%s - %s: %s\n", log_time, msg_type, message) < 0)
+            {
+                fprintf(stderr, "Writing to File failed\n");
+                exit(1);
+            }
             break;
         }
 
         default:
         {
-            fprintf(stderr, "Unknown Log Output! Please fix!\n");
+            fprintf(stderr, "Unknown Log Output!\n");
             exit(1);
         }
     }

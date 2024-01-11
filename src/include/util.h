@@ -16,8 +16,3 @@ extern void swap(void *var1, void *var2, size_t size);
 Returns an Rgba_t struct initialized with the provided arguments. All values should be between 0-255.
 */
 extern Rgba_t set_color(const uint8_t red, const uint8_t green, const uint8_t blue, const uint8_t alpha);
-
-/*
-(UNFINISHED) Initializes the playing field. (Should be moved to game.c)
-*/
-extern void init_playing_field(void);

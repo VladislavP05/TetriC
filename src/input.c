@@ -25,21 +25,24 @@ extern void handle_input(void)
                 {
                     case (SDLK_a):
 
-                        if (active_piece.cord_x == 1) {continue;}
-
-                        active_piece.move(&active_piece, LEFT);
+                        active_piece.move(&active_piece, M_LEFT);
                         break;
                     
                     case (SDLK_d):
 
-                        if (active_piece.cord_x == 10) {continue;}
+                        active_piece.move(&active_piece, M_RIGHT);
+                        break;
 
-                        active_piece.move(&active_piece, RIGHT);
+                    case(SDLK_q):
+
+                        active_piece.rotate(&active_piece, R_CLOCKWISE);
+                        break;
+                    
+                    case(SDLK_e):
+
+                        active_piece.rotate(&active_piece, R_CONTCLOCKWISE);
                         break;
                 }
-
-            default:
-                break;
         }
     }
 }
