@@ -14,15 +14,14 @@ move_direction_t;
 typedef enum
 {
     R_NONE,
-    R_LEFT,
-    R_RIGHT
+    R_CLOCKWISE,
+    R_CONTCLOCKWISE
 }
 rotate_direction_t;
 
 typedef struct
 {
     bool is_block;
-    bool is_static;
     Rgba_t color;
 }
 Block_t;
@@ -38,6 +37,7 @@ typedef struct active_piece_t
         rotate_direction_t rotate_direction;
     };
     uint8_t (*move)(struct active_piece_t *, uint8_t);
+    void (*rotate)(struct active_piece_t *, uint8_t);
 }
 active_piece_t;
 

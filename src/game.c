@@ -14,12 +14,14 @@ Unloads the piece queue when the exit function is called.
 #define PIECE_LIMIT 3
 
 // Array containing the available shapes to be chosen during piece creation. The first index is the id of that shape
-static const uint8_t shapes[5][3][3] = 
+static const uint8_t shapes[7][3][3] = 
 {
     {{0, 1, 0}, {0, 1, 0}, {0, 1, 0}},
     {{0, 0, 0}, {0, 1, 0}, {1, 1, 1}},
     {{0, 0, 0}, {1, 1, 0}, {0, 1, 1}},
+    {{0, 0, 0}, {0, 1, 1}, {1, 1, 0}},
     {{0, 1, 0}, {0, 1, 0}, {0, 1, 1}},
+    {{0, 1, 0}, {0, 1, 0}, {1, 1, 0}},
     {{0, 0, 0}, {0, 1, 1}, {0, 1, 1}},
 };
 
@@ -50,14 +52,28 @@ static uint8_t check_move(active_piece_t *this)
     {
         case (M_DOWN):
 
-            if (this->cord_y == 20) {return 1;}
+            if (this->cord_y == 21) {return 1;}
 
-            for (int8_t x_offset = -1; x_offset <= 1; x_offset++)
+            for (int8_t x_offset = -1; x_offset < 2; x_offset++)
             {
-                if (this->shape[2][x_offset + 1] == 1
-                && playing_field[this->cord_y + 2][this->cord_x + x_offset].is_block)
+                if (this->shape[2][x_offset + 1] == 1 && this->cord_y == 20)
                 {
                     return 1;
+                }
+
+                for (int8_t y_offset = 1; y_offset > -2; y_offset--)
+                {
+                    if (this->shape[y_offset + 1][x_offset + 1] == 0)
+                    {
+                        continue;
+                    }
+
+                    if (playing_field[this->cord_y + y_offset + 1][this->cord_x + x_offset].is_block)
+                    {
+                        return 1;
+                    }
+
+                    break;
                 }
             }
 
@@ -67,24 +83,26 @@ static uint8_t check_move(active_piece_t *this)
 
             if (this->cord_x == 0) {return 1;}
 
-            uint8_t left_point = 1;
-
-            for (uint8_t y_level = 0; y_level < 3; y_level++)
-            {
-                if (this->shape[y_level][0] != 1) {continue;}
-
-                left_point = 0;
-                break;
-            }
-
-            if (left_point == 0 && this->cord_x == 1) {return 1;}
-
             for (int8_t y_offset = -1; y_offset < 2; y_offset++)
             {
-                if (this->shape[y_offset + 1][left_point] == 1
-                && playing_field[this->cord_y + y_offset][this->cord_x - (2 - left_point)].is_block)
+                if (this->shape[y_offset + 1][0] == 1 && this->cord_x == 1)
                 {
                     return 1;
+                }
+
+                for (int8_t x_offset = -1; x_offset < 2; x_offset++)
+                {
+                    if (this->shape[y_offset + 1][x_offset + 1] == 0)
+                    {
+                        continue;
+                    }
+
+                    if (playing_field[this->cord_y + y_offset][this->cord_x + x_offset - 1].is_block)
+                    {
+                        return 1;
+                    }
+
+                    break;
                 }
             }
 
@@ -94,24 +112,26 @@ static uint8_t check_move(active_piece_t *this)
 
             if (this->cord_x == 11) {return 1;}
 
-            uint8_t right_point = 1;
-
-            for (uint8_t y_level = 0; y_level < 3; y_level++)
-            {
-                if (this->shape[y_level][2] != 1) {continue;}
-
-                right_point = 2;
-                break;
-            }
-
-            if (right_point == 2 && this->cord_x == 10) {return 1;}
-
             for (int8_t y_offset = -1; y_offset < 2; y_offset++)
             {
-                if (this->shape[y_offset + 1][right_point] == 1
-                && playing_field[this->cord_y + y_offset][this->cord_x + right_point].is_block)
+                if (this->shape[y_offset + 1][2] == 1 && this->cord_x == 10)
                 {
                     return 1;
+                }
+
+                for (int8_t x_offset = 1; x_offset < -2; x_offset--)
+                {
+                    if (this->shape[y_offset + 1][x_offset + 1] == 0)
+                    {
+                        continue;
+                    }
+
+                    if (playing_field[this->cord_y + y_offset][this->cord_x + x_offset + 1].is_block)
+                    {
+                        return 1;
+                    }
+
+                    break;
                 }
             }
 
@@ -193,30 +213,197 @@ static uint8_t move_piece(active_piece_t *this, uint8_t direction)
         return 0;
     }
 
-    if (!check_move(this))
+    if (check_move(this))
+    {
+        if (this->move_direction == M_DOWN)
+        {
+            return 1;
+        }
+    }
+    else
     {
         swap_blocks(this);
-        return 0;
     }
 
-    if (this->move_direction != M_DOWN) {return 0;}
+    return 0;
+}
 
-    for (int8_t y_offset = 1; y_offset >= -1; y_offset--)
-    {                
-        for (int8_t x_offset = -1; x_offset <= 1; x_offset++)
-        {
-            if (playing_field[this->cord_y + y_offset][this->cord_x + x_offset].is_block)
+/*
+Checks if the requested rotation is valid. Returns a 1 if the rotation is not allowed
+Parameters:
+this - The current active piece
+*/
+static uint8_t check_rotation(active_piece_t *this)
+{
+    assert(this);
+
+    if (this->cord_x == 0 || this->cord_x == 11 || this->cord_y == 21)
+    {
+        return 1;
+    }
+
+    uint8_t rotated_shape[3][3];
+
+    switch (this->rotate_direction)
+    {
+        case (R_CLOCKWISE):
+
+            for (uint8_t i = 0; i < 3; i++)
             {
-                playing_field[this->cord_y + y_offset][this->cord_x + x_offset].is_static = true;
+                for (uint8_t j = 0; j < 3; j++)
+                {
+                    rotated_shape[i][j] = this->shape[j][i];
+                }
+            }
+
+            for (uint8_t i = 0; i < 3; i++)
+            {
+                swap(&rotated_shape[i][0], &rotated_shape[i][2], sizeof(uint8_t));
+            }
+
+            break;
+
+        case (R_CONTCLOCKWISE):
+
+            for (int8_t i = 2; i > -1; i--)
+            {
+                for (int8_t j = 0; j < 3; j++)
+                {
+                    rotated_shape[i][j] = this->shape[j][i];
+                }
+            }
+
+            for (uint8_t i = 0; i < 3; i++)
+            {
+                swap(&rotated_shape[0][i], &rotated_shape[2][i], sizeof(uint8_t));
+            }
+
+            break;
+    }
+
+    for (int8_t y_offset = -1; y_offset < 2; y_offset++)
+    {
+        for (int8_t x_offset = -1; x_offset < 2; x_offset++)
+        {
+            if (!rotated_shape[y_offset + 1][x_offset + 1]) {continue;}
+
+            if (this->cord_x + x_offset < 0 || this->cord_x + x_offset > 11 || this->cord_y + y_offset > 21)
+            {
+                return 1;
+            }
+            else if (this->shape[y_offset + 1][x_offset + 1] == 0 
+            && playing_field[this->cord_y + y_offset][this->cord_x + x_offset].is_block)
+            {
+                return 1;
             }
         }
     }
 
-    return 1;
+    return 0;
 }
 
 /*
-Initializes every piece in the piece_queue and randomly chooses it a shape. Gets called at the start of
+Rotates the piece in the direction assigned to this.rotate_direction
+Parameters:
+this - The current active piece
+*/
+static void rotate_blocks(active_piece_t *this)
+{
+    assert(this);
+
+    uint8_t rotated_shape[3][3];
+
+    switch (this->rotate_direction)
+    {
+        case (R_CLOCKWISE):
+
+            for (uint8_t i = 0; i < 3; i++)
+            {
+                for (uint8_t j = 0; j < 3; j++)
+                {
+                    rotated_shape[i][j] = this->shape[j][i];
+                }
+            }
+
+            for (uint8_t i = 0; i < 3; i++)
+            {
+                swap(&rotated_shape[i][0], &rotated_shape[i][2], sizeof(uint8_t));
+            }
+
+            break;
+
+        case (R_CONTCLOCKWISE):
+
+            for (int8_t i = 2; i > -1; i--)
+            {
+                for (int8_t j = 0; j < 3; j++)
+                {
+                    rotated_shape[i][j] = this->shape[j][i];
+                }
+            }
+
+            for (uint8_t i = 0; i < 3; i++)
+            {
+                swap(&rotated_shape[0][i], &rotated_shape[2][i], sizeof(uint8_t));
+            }
+
+            break;
+    }
+
+    for (int8_t y_offset = -1; y_offset < 2; y_offset++)
+    {
+        for (int8_t x_offset = -1; x_offset < 2; x_offset++)
+        {
+            if (this->shape[y_offset + 1][x_offset + 1] != 1) {continue;}
+
+            playing_field[this->cord_y + y_offset][this->cord_x + x_offset].is_block = false;
+            playing_field[this->cord_y + y_offset][this->cord_x + x_offset].color = set_color(0, 0, 0, 0);
+        }
+    }
+
+    memcpy(this->shape, rotated_shape, 9 * sizeof(uint8_t));
+
+    for (int8_t y_offset = -1; y_offset < 2; y_offset++)
+    {
+        for (int8_t x_offset = -1; x_offset < 2; x_offset++)
+        {
+            if (this->shape[y_offset + 1][x_offset + 1] != 1) {continue;}
+
+            playing_field[this->cord_y + y_offset][this->cord_x + x_offset].is_block = true;
+            playing_field[this->cord_y + y_offset][this->cord_x + x_offset].color = set_color(255, 255, 255, 255); 
+
+        }
+    }
+}
+
+/*
+Calls the check_rotation and rotate_blocks to rotate the active piece in the specified direction if possible.
+Parameters:
+this - The current active piece
+direction - The direction in which the piece will attempt to rotate. Use the enumerated values defined in game.h (example R_CLOCKWISE).
+*/
+static void rotate_piece(active_piece_t *this, uint8_t direction)
+{
+    assert(this);
+
+    this->rotate_direction = direction;
+
+    if (this->rotate_direction == R_NONE)
+    {
+        write_log("Active piece rotate function called with argument NONE", LOG_OUT_FILE | LOG_TYPE_WRN);
+        return;
+    }
+
+    if (!check_rotation(this))
+    {
+        rotate_blocks(this);
+    }
+
+    return;
+}
+
+/*
+Initializes every piece in the piece_queue and randomly assigns it a shape. Gets called at the start of
 the game and every time a new piece is spawned
 */
 static void populate_piece_queue()
@@ -233,7 +420,7 @@ static void populate_piece_queue()
         }
         piece_queue[i]->cord_x = piece_queue[i]->cord_y = 0;
 
-        piece_queue[i]->shape_id = rand() % 5;
+        piece_queue[i]->shape_id = rand() % (sizeof(shapes) / 9);
         memcpy(piece_queue[i]->shape, shapes[piece_queue[i]->shape_id], sizeof(uint8_t) * 9);
     }
 }
@@ -259,6 +446,7 @@ static void spawn_next_piece()
     active_piece.cord_x = 5; active_piece.cord_y = 2;
     active_piece.move_direction = M_NONE;
     active_piece.move = move_piece;
+    active_piece.rotate = rotate_piece;
 
     for (int y_offset = 0; y_offset < 3; y_offset++)
     {
@@ -322,7 +510,6 @@ extern void start_game(void)
         for (int j = 0; j < 12; j++)
         {
             playing_field[i][j].is_block = false;
-            playing_field[i][j].is_static = false;
             playing_field[i][j].color = set_color(0, 0, 0, 0);
         }
     }
