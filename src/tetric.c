@@ -13,7 +13,6 @@
 #include "include/output.h"
 #include "include/game.h"
 
-#define FPS 75          // Target frames per second
 #define TARGET_FRAME_TIME (1000 / FPS)          // Time between each frame
 
 int main(void)

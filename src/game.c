@@ -50,6 +50,10 @@ static uint8_t check_move(active_piece_t *this)
 
     switch (this->move_direction)
     {
+        case(M_NONE):
+
+            return 1;
+
         case (M_DOWN):
 
             if (this->cord_y == 21) {return 1;}
@@ -246,6 +250,10 @@ static uint8_t check_rotation(active_piece_t *this)
 
     switch (this->rotate_direction)
     {
+        case (R_NONE):
+            
+            return 1;
+
         case (R_CLOCKWISE):
 
             for (uint8_t i = 0; i < 3; i++)
@@ -302,7 +310,7 @@ static uint8_t check_rotation(active_piece_t *this)
     return 0;
 }
 
-/*
+/**
 Rotates the piece in the direction assigned to this.rotate_direction
 Parameters:
 this - The current active piece
@@ -315,6 +323,10 @@ static void rotate_blocks(active_piece_t *this)
 
     switch (this->rotate_direction)
     {
+        case (R_NONE):
+
+            return;
+
         case (R_CLOCKWISE):
 
             for (uint8_t i = 0; i < 3; i++)
