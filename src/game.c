@@ -10,11 +10,8 @@ Unloads the piece queue when the exit function is called.
 #include "include/game.h"
 #include "include/log.h"
 
-// Size of the piece queue. The default is 3
-#define PIECE_LIMIT 3
-
 // Array containing the available shapes to be chosen during piece creation. The first index is the id of that shape
-static const uint8_t shapes[7][3][3] = 
+static const uint8_t shapes[PIECE_SHAPES][3][3] = 
 {
     {{0, 1, 0}, {0, 1, 0}, {0, 1, 0}},
     {{0, 0, 0}, {0, 1, 0}, {1, 1, 1}},
@@ -22,22 +19,42 @@ static const uint8_t shapes[7][3][3] =
     {{0, 0, 0}, {0, 1, 1}, {1, 1, 0}},
     {{0, 1, 0}, {0, 1, 0}, {0, 1, 1}},
     {{0, 1, 0}, {0, 1, 0}, {1, 1, 0}},
-    {{0, 0, 0}, {0, 1, 1}, {0, 1, 1}},
+    {{0, 0, 0}, {0, 1, 1}, {0, 1, 1}}
 };
 
 // Game tick counter. Resets every second (ticks % FPS)
 static uint8_t ticks;
+static SDL_Color shapes_color[PIECE_SHAPES];
 
 // Array containing the next pieces to be spawned. When the spawn_piece function is called, the first piece in the queue
 // gets set as the active piece and removed from the queue, then the queue shifts its elements to i - 1 and initializes the last
 // piece using a random shape from the shapes array.
-static active_piece_t *piece_queue[PIECE_LIMIT];
+active_piece_t *piece_queue[QUEUE_LIMIT];
 
 // Currently moving piece
 active_piece_t active_piece;
 
 // The main game array containing the color and status of all blocks of the field
 Block_t playing_field[22][12];
+
+static void init_shape_color(void)
+{
+    uint8_t colors[PIECE_SHAPES][4] = 
+    {
+        {0, 170, 170, 255},
+        {100, 0, 170, 255},
+        {0, 170, 0, 255},
+        {170, 0, 0, 255},
+        {170, 100, 0, 255},
+        {0, 0, 170, 255},
+        {170, 170, 0, 255}
+    };
+
+    for (uint8_t i = 0; i < PIECE_SHAPES; i++)
+    {
+        shapes_color[i] = set_color(colors[i][0], colors[i][1], colors[i][2], colors[i][3]);
+    }
+}
 
 /*
 Checks if the requested move is valid. Returns a 1 if the move is not allowed
@@ -50,6 +67,10 @@ static uint8_t check_move(active_piece_t *this)
 
     switch (this->move_direction)
     {
+        case(M_NONE):
+
+            return 1;
+
         case (M_DOWN):
 
             if (this->cord_y == 21) {return 1;}
@@ -119,7 +140,7 @@ static uint8_t check_move(active_piece_t *this)
                     return 1;
                 }
 
-                for (int8_t x_offset = 1; x_offset < -2; x_offset--)
+                for (int8_t x_offset = 1; x_offset > -2; x_offset--)
                 {
                     if (this->shape[y_offset + 1][x_offset + 1] == 0)
                     {
@@ -188,7 +209,7 @@ static void swap_blocks(active_piece_t *this)
             if (this->shape[y_offset + 1][x_offset + 1] != 1) {continue;}
 
             playing_field[this->cord_y + y_offset][this->cord_x + x_offset].is_block = true;
-            playing_field[this->cord_y + y_offset][this->cord_x + x_offset].color = set_color(255, 255, 255, 255); 
+            playing_field[this->cord_y + y_offset][this->cord_x + x_offset].color = shapes_color[active_piece.shape_id]; 
 
         }
     }
@@ -246,6 +267,10 @@ static uint8_t check_rotation(active_piece_t *this)
 
     switch (this->rotate_direction)
     {
+        case (R_NONE):
+            
+            return 1;
+
         case (R_CLOCKWISE):
 
             for (uint8_t i = 0; i < 3; i++)
@@ -258,7 +283,7 @@ static uint8_t check_rotation(active_piece_t *this)
 
             for (uint8_t i = 0; i < 3; i++)
             {
-                swap(&rotated_shape[i][0], &rotated_shape[i][2], sizeof(uint8_t));
+                swap(&rotated_shape[i][0], &rotated_shape[i][2], 1);
             }
 
             break;
@@ -275,7 +300,7 @@ static uint8_t check_rotation(active_piece_t *this)
 
             for (uint8_t i = 0; i < 3; i++)
             {
-                swap(&rotated_shape[0][i], &rotated_shape[2][i], sizeof(uint8_t));
+                swap(&rotated_shape[0][i], &rotated_shape[2][i], 1);
             }
 
             break;
@@ -315,6 +340,10 @@ static void rotate_blocks(active_piece_t *this)
 
     switch (this->rotate_direction)
     {
+        case (R_NONE):
+
+            return;
+
         case (R_CLOCKWISE):
 
             for (uint8_t i = 0; i < 3; i++)
@@ -327,7 +356,7 @@ static void rotate_blocks(active_piece_t *this)
 
             for (uint8_t i = 0; i < 3; i++)
             {
-                swap(&rotated_shape[i][0], &rotated_shape[i][2], sizeof(uint8_t));
+                swap(&rotated_shape[i][0], &rotated_shape[i][2], 1);
             }
 
             break;
@@ -344,7 +373,7 @@ static void rotate_blocks(active_piece_t *this)
 
             for (uint8_t i = 0; i < 3; i++)
             {
-                swap(&rotated_shape[0][i], &rotated_shape[2][i], sizeof(uint8_t));
+                swap(&rotated_shape[0][i], &rotated_shape[2][i], 1);
             }
 
             break;
@@ -370,7 +399,7 @@ static void rotate_blocks(active_piece_t *this)
             if (this->shape[y_offset + 1][x_offset + 1] != 1) {continue;}
 
             playing_field[this->cord_y + y_offset][this->cord_x + x_offset].is_block = true;
-            playing_field[this->cord_y + y_offset][this->cord_x + x_offset].color = set_color(255, 255, 255, 255); 
+            playing_field[this->cord_y + y_offset][this->cord_x + x_offset].color = shapes_color[active_piece.shape_id]; 
 
         }
     }
@@ -408,7 +437,7 @@ the game and every time a new piece is spawned
 */
 static void populate_piece_queue()
 {
-    for (uint8_t i = 0; i < PIECE_LIMIT; i++)
+    for (uint8_t i = 0; i < QUEUE_LIMIT; i++)
     {
         if (piece_queue[i] != NULL) {continue;}
 
@@ -420,7 +449,7 @@ static void populate_piece_queue()
         }
         piece_queue[i]->cord_x = piece_queue[i]->cord_y = 0;
 
-        piece_queue[i]->shape_id = rand() % (sizeof(shapes) / 9);
+        piece_queue[i]->shape_id = rand() % PIECE_SHAPES;
         memcpy(piece_queue[i]->shape, shapes[piece_queue[i]->shape_id], sizeof(uint8_t) * 9);
     }
 }
@@ -434,12 +463,12 @@ static void spawn_next_piece()
     memcpy(&active_piece, piece_queue[0], sizeof(active_piece_t));
 
     // Shifts the pieces of the query to i - 1
-    for (uint8_t i = 0; i < PIECE_LIMIT - 1; i++)
+    for (uint8_t i = 0; i < QUEUE_LIMIT - 1; i++)
     {
         memcpy(piece_queue[i], piece_queue[i + 1], sizeof(active_piece_t));
     }
-    free(piece_queue[PIECE_LIMIT - 1]);
-    piece_queue[PIECE_LIMIT - 1] = NULL;
+    free(piece_queue[QUEUE_LIMIT - 1]);
+    piece_queue[QUEUE_LIMIT - 1] = NULL;
 
     populate_piece_queue();
 
@@ -453,7 +482,8 @@ static void spawn_next_piece()
         for (int x_offset = 0; x_offset < 3; x_offset++)
         {
             if (!active_piece.shape[y_offset][x_offset]) {continue;}
-            playing_field[2 + (y_offset - 1)][5 + (x_offset - 1)].color = set_color(255, 255, 255, 255);
+
+            playing_field[2 + (y_offset - 1)][5 + (x_offset - 1)].color = shapes_color[active_piece.shape_id];
             playing_field[2 + (y_offset - 1)][5 + (x_offset - 1)].is_block = true;
         }
     }
@@ -464,7 +494,7 @@ Unloads the piece queue at the end of the game
 */
 static void unload_piece_queue()
 {
-    for (uint8_t i = 0; i < PIECE_LIMIT; i++)
+    for (uint8_t i = 0; i < QUEUE_LIMIT; i++)
     {
         if (piece_queue[i] == NULL) {continue;}
         free(piece_queue[i]);
@@ -501,7 +531,8 @@ extern void start_game(void)
 {
     // Test implementation
 
-    static_assert(PIECE_LIMIT < 256, "Piece limit should be lower than 256");
+    static_assert(QUEUE_LIMIT < 9, "Piece limit should be lower than 9");
+    static_assert(PIECE_SHAPES == 7, "Change if you want to add more shapes. You have to define the shape and color in the respective arrays!");
 
     write_log("Starting game...", LOG_TYPE_INF | LOG_OUT_FILE);
 
@@ -514,6 +545,7 @@ extern void start_game(void)
         }
     }
 
+    init_shape_color();
     populate_piece_queue();
     write_log("Piece queue initialized", LOG_TYPE_INF | LOG_OUT_FILE);
     spawn_next_piece();

@@ -13,14 +13,13 @@
 #include "include/output.h"
 #include "include/game.h"
 
-#define FPS 75          // Target frames per second
 #define TARGET_FRAME_TIME (1000 / FPS)          // Time between each frame
 
 int main(void)
 {
     if (atexit(&unload_resources))
     {
-        fprintf(stderr, "Exit function registration failed!\n");
+        fprintf(stderr, "Exit function registration failed\n");
         return 1;
     }
 
@@ -41,7 +40,7 @@ int main(void)
 
 static void update_frame_time(void)
 {
-    static uint32_t frame_time;
+    static uint32_t frame_time = 0;
 
     uint32_t frame_delay = TARGET_FRAME_TIME - (SDL_GetTicks() - frame_time);
 
@@ -63,14 +62,14 @@ static void initialize_resources(void)
         exit(1);
     }
 
-    init_SDL_video();
     start_game();
+    init_output();
 }
 
 static void unload_resources(void)
 {
     unload_game();
-    unload_SDL_video();
+    unload_output();
     SDL_Quit();
     unload_log();
 }

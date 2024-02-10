@@ -5,7 +5,7 @@
 #include <stdint.h>
 #include <SDL2/SDL.h>
 
-#define WINDOW_WIDTH 1280
+#define WINDOW_WIDTH 540
 #define WINDOW_HEIGHT 720
 
 typedef struct
@@ -15,15 +15,6 @@ typedef struct
     bool is_closed;           // True when game is running and set to false when SDL_Quit event is called
 }
 Game_t;
-
-typedef struct
-{
-    uint8_t red;
-    uint8_t green;
-    uint8_t blue;
-    uint8_t alpha;
-}
-Rgba_t;
 
 extern Game_t game;                 // Currently stores the window and renderer pointers
 
