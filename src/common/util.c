@@ -26,8 +26,8 @@ extern void swap(void *var1, void *var2, size_t size)
     return;
 }
 
-extern Rgba_t set_color(const uint8_t red, const uint8_t green, const uint8_t blue, const uint8_t alpha)
+extern SDL_Color set_color(const uint8_t red, const uint8_t green, const uint8_t blue, const uint8_t alpha)
 {
-    Rgba_t color = {.red = red, .green = green, .blue = blue, .alpha = alpha};
+    SDL_Color color = {.r = red, .g = green, .b = blue, .a = alpha};
     return color;
 }

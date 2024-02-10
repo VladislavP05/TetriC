@@ -2,6 +2,9 @@
 
 #define FPS 75
 
+#define PIECE_SHAPES 7
+#define QUEUE_LIMIT 3           // Size of the piece queue. The default is 3
+
 typedef enum
 {
     M_NONE,
@@ -22,7 +25,7 @@ rotate_direction_t;
 typedef struct
 {
     bool is_block;
-    Rgba_t color;
+    SDL_Color color;
 }
 Block_t;
 
@@ -42,6 +45,7 @@ typedef struct active_piece_t
 active_piece_t;
 
 extern Block_t playing_field[22][12];
+extern active_piece_t *piece_queue[QUEUE_LIMIT];
 extern active_piece_t active_piece;
 
 extern void tick_logic(void);

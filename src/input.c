@@ -42,6 +42,11 @@ extern void handle_input(void)
 
                         active_piece.rotate(&active_piece, R_CONTCLOCKWISE);
                         break;
+
+                    case(SDLK_s):
+
+                        active_piece.move(&active_piece, M_DOWN);
+                        break;
                 }
         }
     }
