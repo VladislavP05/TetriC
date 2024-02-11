@@ -53,7 +53,6 @@ dkms.conf
 
 .vscode/
 *.log
-*.zip
 
 
 bin/Tetric

@@ -73,11 +73,7 @@ static void update_queue_list(void)
 {
     for (uint8_t i = 0; i < QUEUE_LIMIT; i++)
     {
-        if (queue_elements[i])
-        {
-            SDL_DestroyTexture(queue_elements[i]->texture);
-            free(queue_elements[i]);
-        }
+        free(queue_elements[i]);
         queue_elements[i] = calloc(1, sizeof(ui_element_t));
 
         if (!queue_elements[i])
