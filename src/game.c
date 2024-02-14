@@ -25,6 +25,7 @@ static const uint8_t shapes[PIECE_SHAPES][3][3] =
 // Game tick counter. Resets every second (ticks % FPS)
 static uint8_t ticks;
 static SDL_Color shapes_color[PIECE_SHAPES];
+static float score_multiplier = 1.0f;
 
 // Array containing the next pieces to be spawned. When the spawn_piece function is called, the first piece in the queue
 // gets set as the active piece and removed from the queue, then the queue shifts its elements to i - 1 and initializes the last
@@ -36,6 +37,8 @@ active_piece_t active_piece;
 
 // The main game array containing the color and status of all blocks of the field
 Block_t playing_field[22][12];
+
+uint32_t score = 0;
 
 static void init_shape_color(void)
 {
@@ -54,6 +57,62 @@ static void init_shape_color(void)
     {
         shapes_color[i] = set_color(colors[i][0], colors[i][1], colors[i][2], colors[i][3]);
     }
+}
+
+static void clear_lines(uint8_t line_idx, uint8_t num_lines)
+{
+    memset(playing_field[line_idx], 0, (sizeof(Block_t) * 12) * num_lines);
+
+    for (uint8_t i = 0; i < line_idx; i++)
+    {
+        memcpy(playing_field[(line_idx + num_lines - 1) - i], playing_field[(line_idx - 1) - i], sizeof(Block_t) * 12);
+        memset(playing_field[(line_idx - 1) - i], 0, sizeof(Block_t) * 12);
+    }
+
+    return;
+}
+
+static uint8_t count_lines(uint8_t line_idx)
+{
+    uint8_t count = 0;
+
+    for (uint8_t i = 0; i < 3; i++)
+    {
+        for (uint8_t j = 0; j < 12; j++)
+        {
+            if (!playing_field[line_idx + i][j].is_block)
+            {
+                return count;
+            }
+        }
+
+        count++;
+    }
+
+    return count;
+}
+
+static void check_lines(void)
+{
+    uint8_t line_num = 0;
+    uint8_t line_idx = 0;
+
+    for (uint8_t i = 1; i <= 21 && line_num == 0; i++)
+    {
+        line_idx = i;
+        line_num = count_lines(line_idx);
+    }
+
+    if (line_num == 0)
+    {
+        return;
+    }
+
+    score += (50 * score_multiplier) * line_num;
+
+    clear_lines(line_idx, line_num);
+
+    return;
 }
 
 /*
@@ -516,6 +575,7 @@ extern void tick_logic(void)
 
     if (active_piece.move(&active_piece, M_DOWN))
     {
+        check_lines();
         spawn_next_piece(); // TEST
     }
 
@@ -532,7 +592,7 @@ extern void start_game(void)
     // Test implementation
 
     static_assert(QUEUE_LIMIT < 9, "Piece limit should be lower than 9");
-    static_assert(PIECE_SHAPES == 7, "Change if you want to add more shapes. You have to define the shape and color in the respective arrays!");
+    static_assert(PIECE_SHAPES == 7, "Change if you want to add more shapes. You have to define the shape and color in the respective arrays.");
 
     write_log("Starting game...", LOG_TYPE_INF | LOG_OUT_FILE);
 
