@@ -47,6 +47,7 @@ active_piece_t;
 extern Block_t playing_field[22][12];
 extern active_piece_t *piece_queue[QUEUE_LIMIT];
 extern active_piece_t active_piece;
+extern uint32_t score;
 
 extern void tick_logic(void);
 

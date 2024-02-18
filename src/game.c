@@ -576,6 +576,7 @@ extern void tick_logic(void)
     if (active_piece.move(&active_piece, M_DOWN))
     {
         check_lines();
+        check_lines();      // In case of disconnected full lines. Not very efficient \/('_')\/
         spawn_next_piece(); // TEST
     }
 

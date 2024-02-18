@@ -11,7 +11,7 @@ PROGRAM=$(BIN)/Tetric
 CC=gcc
 
 # Build flags
-OPTLVL=-Og
+OPTLVL=-O0
 DEPFLAGS=-MP -MD
 CFLAGS= -Wall -Wextra --static -c -g $(OPTLVL) -I$(INC) $(DEPFLAGS)
 SDLFLAGS=`pkg-config --cflags --libs sdl2` -lSDL2_ttf -lSDL2_image -lm

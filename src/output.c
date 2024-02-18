@@ -25,6 +25,7 @@ ui_element_node_t;
 
 static ui_element_node_t *text_elements = NULL;   // The first node in a single linked list used for storing text elements
 static ui_element_t *queue_elements[QUEUE_LIMIT]; // Array containing the graphical info about the piece queue
+static uint8_t score_text_id;
 
 // TEMP
 static const SDL_Color WHITE = {.r = 255, .g = 255, .b = 255, .a = 255};
@@ -50,19 +51,62 @@ win_x - The x coordinate of the text box
 win_y - The y coordinate of the text box
 text_size - The size of the text box
 */
-static void add_text_element(ui_element_node_t *element_pointer, const char *message, SDL_Color color, uint16_t win_x, uint16_t win_y, uint16_t text_size)
+static uint8_t add_text_element(ui_element_node_t *element_pointer, const char *message, SDL_Color color, uint16_t win_x, uint16_t win_y, float scale)
 {
     assert(element_pointer);
+
+    static uint8_t ui_id;
 
     if (!element_pointer->next)
     {
         element_pointer->next = calloc(1, sizeof(ui_element_node_t));
-        element_pointer->next->text_box = create_text_box(message, color, win_x, win_y, text_size);
-        return;
+        element_pointer->next->text_box = create_text_box(message, color, win_x, win_y, scale);
+        ui_id = element_pointer->next->text_box.id;
+        return 0;
     }
 
-    add_text_element(element_pointer->next, message, color, win_x, win_y, text_size);
+    add_text_element(element_pointer->next, message, color, win_x, win_y, scale);
     
+    return ui_id;
+}
+
+static void update_score_text(void)
+{
+    ui_element_node_t *element_pointer = text_elements;
+
+    while (element_pointer->text_box.id != score_text_id)
+    {
+        if (!element_pointer->next)
+        {
+            write_log("Score text box id not found", LOG_OUT_BOTH | LOG_TYPE_ERR);
+            exit(1);
+        }
+
+        element_pointer = element_pointer->next;
+    }
+
+    char score_composite[11];
+
+    for (uint8_t i = 0; i < 10; i++)
+    {
+        score_composite[i] = 48;
+    }
+
+    score_composite[10] = 0;
+
+    char score_str[10];
+
+    uint8_t score_len = snprintf(NULL, 0, "%u", score);
+
+    sprintf(score_str, "%u", score);
+
+    for (uint8_t i = 0; i < score_len; i++)
+    {
+        score_composite[9 - i] = score_str[(score_len - 1) - i];
+    }
+
+    refresh_text_box(&element_pointer->text_box, score_composite, WHITE);
+
     return;
 }
 
@@ -160,6 +204,8 @@ static void render_ui(void)
 {
     ui_element_node_t *element_pointer = text_elements;
 
+    update_score_text();
+
     while (element_pointer)
     {
         SDL_RenderCopy(game.renderer, element_pointer->text_box.texture, NULL, &element_pointer->text_box.rect);
@@ -213,10 +259,9 @@ extern void render_frame(void)
 
     render_ui();
 
-    set_render_col(WHITE);
-
 #ifdef UI_GUIDES
 
+    set_render_col(WHITE);
     SDL_RenderDrawLine(game.renderer, WINDOW_WIDTH / 2, 0, WINDOW_WIDTH / 2, WINDOW_HEIGHT);
     SDL_RenderDrawLine(game.renderer, 0, WINDOW_HEIGHT / 2, WINDOW_WIDTH, WINDOW_HEIGHT / 2);
 
@@ -256,9 +301,8 @@ extern void init_output(void)
 
     text_elements = calloc(1, sizeof(ui_element_node_t));
 
-    add_text_element(text_elements, "TetriC v0.3", WHITE, 1000, 680, 25);
-    add_text_element(text_elements, "Score", WHITE, WINDOW_WIDTH / 2 - 40, 60, 40);
-    add_text_element(text_elements, "000000000", WHITE, WINDOW_HEIGHT / 4 + 8, 100, 55);
+    add_text_element(text_elements, "Score", WHITE, WINDOW_WIDTH / 3 + 34, 55, 0.45);
+    score_text_id = add_text_element(text_elements, "000000000", WHITE, WINDOW_HEIGHT / 4 - 22, 100, 0.5);
 
     return;
 }
