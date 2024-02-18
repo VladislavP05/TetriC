@@ -25,7 +25,7 @@ rotate_direction_t;
 typedef struct
 {
     bool is_block;
-    SDL_Color color;
+    uint8_t texture_id;
 }
 Block_t;
 

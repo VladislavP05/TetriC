@@ -9,7 +9,9 @@ typedef struct
 }
 ui_element_t;
 
-extern SDL_Surface *queue_textures[];
+extern SDL_Texture *queue_textures[];
+
+extern SDL_Texture * load_texture(const char *file);
 
 extern ui_element_t create_text_box(const char *message, SDL_Color color, uint16_t win_x, uint16_t win_y, float scale);
 

@@ -24,7 +24,6 @@ static const uint8_t shapes[PIECE_SHAPES][3][3] =
 
 // Game tick counter. Resets every second (ticks % FPS)
 static uint8_t ticks;
-static SDL_Color shapes_color[PIECE_SHAPES];
 static float score_multiplier = 1.0f;
 
 // Array containing the next pieces to be spawned. When the spawn_piece function is called, the first piece in the queue
@@ -39,25 +38,6 @@ active_piece_t active_piece;
 Block_t playing_field[22][12];
 
 uint32_t score = 0;
-
-static void init_shape_color(void)
-{
-    uint8_t colors[PIECE_SHAPES][4] = 
-    {
-        {0, 170, 170, 255},
-        {100, 0, 170, 255},
-        {0, 170, 0, 255},
-        {170, 0, 0, 255},
-        {170, 100, 0, 255},
-        {0, 0, 170, 255},
-        {170, 170, 0, 255}
-    };
-
-    for (uint8_t i = 0; i < PIECE_SHAPES; i++)
-    {
-        shapes_color[i] = set_color(colors[i][0], colors[i][1], colors[i][2], colors[i][3]);
-    }
-}
 
 static void clear_lines(uint8_t line_idx, uint8_t num_lines)
 {
@@ -254,7 +234,7 @@ static void swap_blocks(active_piece_t *this)
             if (this->shape[y_offset + 1][x_offset + 1] != 1) {continue;}
 
             playing_field[this->cord_y + y_offset][this->cord_x + x_offset].is_block = false;
-            playing_field[this->cord_y + y_offset][this->cord_x + x_offset].color = set_color(0, 0, 0, 0);
+            playing_field[this->cord_y + y_offset][this->cord_x + x_offset].texture_id = 0;
         }
     }
 
@@ -268,7 +248,7 @@ static void swap_blocks(active_piece_t *this)
             if (this->shape[y_offset + 1][x_offset + 1] != 1) {continue;}
 
             playing_field[this->cord_y + y_offset][this->cord_x + x_offset].is_block = true;
-            playing_field[this->cord_y + y_offset][this->cord_x + x_offset].color = shapes_color[active_piece.shape_id]; 
+            playing_field[this->cord_y + y_offset][this->cord_x + x_offset].texture_id = active_piece.shape_id; 
 
         }
     }
@@ -445,7 +425,7 @@ static void rotate_blocks(active_piece_t *this)
             if (this->shape[y_offset + 1][x_offset + 1] != 1) {continue;}
 
             playing_field[this->cord_y + y_offset][this->cord_x + x_offset].is_block = false;
-            playing_field[this->cord_y + y_offset][this->cord_x + x_offset].color = set_color(0, 0, 0, 0);
+            playing_field[this->cord_y + y_offset][this->cord_x + x_offset].texture_id = 0;
         }
     }
 
@@ -458,7 +438,7 @@ static void rotate_blocks(active_piece_t *this)
             if (this->shape[y_offset + 1][x_offset + 1] != 1) {continue;}
 
             playing_field[this->cord_y + y_offset][this->cord_x + x_offset].is_block = true;
-            playing_field[this->cord_y + y_offset][this->cord_x + x_offset].color = shapes_color[active_piece.shape_id]; 
+            playing_field[this->cord_y + y_offset][this->cord_x + x_offset].texture_id = active_piece.shape_id; 
 
         }
     }
@@ -542,7 +522,7 @@ static void spawn_next_piece()
         {
             if (!active_piece.shape[y_offset][x_offset]) {continue;}
 
-            playing_field[2 + (y_offset - 1)][5 + (x_offset - 1)].color = shapes_color[active_piece.shape_id];
+            playing_field[2 + (y_offset - 1)][5 + (x_offset - 1)].texture_id = active_piece.shape_id;
             playing_field[2 + (y_offset - 1)][5 + (x_offset - 1)].is_block = true;
         }
     }
@@ -595,18 +575,17 @@ extern void start_game(void)
     static_assert(QUEUE_LIMIT < 9, "Piece limit should be lower than 9");
     static_assert(PIECE_SHAPES == 7, "Change if you want to add more shapes. You have to define the shape and color in the respective arrays.");
 
-    write_log("Starting game...", LOG_TYPE_INF | LOG_OUT_FILE);
+    write_log("Starting game", LOG_TYPE_INF | LOG_OUT_FILE);
 
     for (int i = 0; i < 22; i++)
     {
         for (int j = 0; j < 12; j++)
         {
             playing_field[i][j].is_block = false;
-            playing_field[i][j].color = set_color(0, 0, 0, 0);
+            playing_field[i][j].texture_id = 0;
         }
     }
 
-    init_shape_color();
     populate_piece_queue();
     write_log("Piece queue initialized", LOG_TYPE_INF | LOG_OUT_FILE);
     spawn_next_piece();

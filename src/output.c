@@ -16,6 +16,13 @@
 #define BLOCK_SIZE (PLAYING_FIELD_HEIGHT / 20)                       // Size of playing field blocks
 #define BLOCK_PADDING 2                                              // The size of padding beween blocks
 
+/*
+Sets the rendering color to the provided color struct.
+Parameters:
+col - The color which the render will switch to
+*/
+#define SetRenderColor(col) SDL_SetRenderDrawColor(game.renderer, col.r, col.g, col.b, col.a)
+
 typedef struct ui_element_node_t
 {
     ui_element_t text_box;
@@ -23,23 +30,14 @@ typedef struct ui_element_node_t
 }
 ui_element_node_t;
 
-static ui_element_node_t *text_elements = NULL;   // The first node in a single linked list used for storing text elements
-static ui_element_t *queue_elements[QUEUE_LIMIT]; // Array containing the graphical info about the piece queue
 static uint8_t score_text_id;
+static ui_element_node_t *text_elements = NULL;   // The first node in a single linked list used for storing text elements
+static SDL_Texture *block_textures[PIECE_SHAPES];
+static ui_element_t *queue_elements[QUEUE_LIMIT]; // Array containing the graphical info about the piece queue
 
 // TEMP
-static const SDL_Color WHITE = {.r = 255, .g = 255, .b = 255, .a = 255};
 static const SDL_Color BLACK = {.r = 0, .g = 0, .b = 0, .a = 255};
-
-/*
-Sets the rendering color to the provided color struct.
-Parameters:
-color - The color which the render will switch to
-*/
-static int8_t set_render_col(const SDL_Color color)
-{
-    return SDL_SetRenderDrawColor(game.renderer, color.r, color.g, color.b, color.a);
-}
+static const SDL_Color WHITE = {.r = 255, .g = 255, .b = 255, .a = 255};
 
 /*
 Adds a text element to the list.
@@ -70,6 +68,9 @@ static uint8_t add_text_element(ui_element_node_t *element_pointer, const char *
     return ui_id;
 }
 
+/*
+Transforms the score variable to char * and updates the score text.
+*/
 static void update_score_text(void)
 {
     ui_element_node_t *element_pointer = text_elements;
@@ -119,7 +120,7 @@ static void update_queue_list(void)
     {
         if (queue_elements[i])
         {
-            SDL_DestroyTexture(queue_elements[i]->texture);
+            // SDL_DestroyTexture(queue_elements[i]->texture);
             free(queue_elements[i]);
         }
         queue_elements[i] = calloc(1, sizeof(ui_element_t));
@@ -131,6 +132,16 @@ static void update_queue_list(void)
         }
 
         *queue_elements[i] = create_queue_box(piece_queue[i]->shape_id, PLAYING_FIELD_X + PLAYING_FIELD_WIDTH + 10, PLAYING_FIELD_Y + 50 * (i + 1));
+    }
+
+    return;
+}
+
+static void unload_block_textures(void)
+{
+    for (uint8_t i = 0; i < PIECE_SHAPES; i++)
+    {
+        SDL_DestroyTexture(block_textures[i]);
     }
 
     return;
@@ -155,8 +166,6 @@ static void render_block_array(const uint16_t field_x, const uint16_t field_y)
                 continue;
             }
 
-            set_render_col(playing_field[i][j].color);
-
             SDL_Rect block_rect = 
             {
             .h = BLOCK_SIZE - BLOCK_PADDING,
@@ -165,9 +174,7 @@ static void render_block_array(const uint16_t field_x, const uint16_t field_y)
             .y = field_y + i * BLOCK_SIZE - BLOCK_SIZE * 2
             };
 
-            SDL_RenderFillRect(game.renderer, &block_rect);
-
-            SDL_RenderDrawRect(game.renderer, &block_rect);
+            SDL_RenderCopy(game.renderer, block_textures[playing_field[i][j].texture_id], NULL, &block_rect);
         }
     }
 
@@ -190,7 +197,7 @@ static void render_playing_field(uint16_t pos_x, uint16_t pos_y)
 
     render_block_array(pos_x, pos_y + offset_y);
 
-    SDL_SetRenderDrawColor(game.renderer, 255, 255, 255, 255);
+    SetRenderColor(WHITE);
 
     SDL_RenderDrawRect(game.renderer, &rect);
 
@@ -261,13 +268,13 @@ extern void render_frame(void)
 
 #ifdef UI_GUIDES
 
-    set_render_col(WHITE);
+    SetRenderColor(WHITE);
     SDL_RenderDrawLine(game.renderer, WINDOW_WIDTH / 2, 0, WINDOW_WIDTH / 2, WINDOW_HEIGHT);
     SDL_RenderDrawLine(game.renderer, 0, WINDOW_HEIGHT / 2, WINDOW_WIDTH, WINDOW_HEIGHT / 2);
 
 #endif
 
-    set_render_col(BLACK);
+    SetRenderColor(BLACK);
 
     SDL_RenderPresent(game.renderer);
 
@@ -299,6 +306,14 @@ extern void init_output(void)
 
     write_log("Game renderer and window created", LOG_OUT_FILE | LOG_TYPE_INF);
 
+    for (uint8_t i = 0; i < PIECE_SHAPES; i++)
+    {
+        char file[] = "Block?.bmp";
+        file[5] = (char) i + 49;
+
+        block_textures[i] = load_texture(file);
+    }
+
     text_elements = calloc(1, sizeof(ui_element_node_t));
 
     add_text_element(text_elements, "Score", WHITE, WINDOW_WIDTH / 3 + 34, 55, 0.45);
@@ -312,6 +327,8 @@ Unloads resources used by the output system.
 */
 extern void unload_output(void)
 {
+    unload_block_textures();
+
     free_element_list(text_elements);
 
     unload_ui();

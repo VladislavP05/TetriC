@@ -10,30 +10,9 @@
 
 #define FONT_SIZE 100   // Size of the font used by the ui
 
-SDL_Surface *queue_textures[PIECE_SHAPES];  // Array containing the textures for the queue
+SDL_Texture *queue_textures[PIECE_SHAPES];  // Array containing the textures for the queue
 
 static TTF_Font *ui_font;   // The font of the ui
-
-/*
-Loads the texture files into the queue_textures array.
-*/
-static void load_queue_textures(void)
-{
-    for (uint8_t i = 0; i < PIECE_SHAPES; i++)
-    {
-        char file[] = "Textures/Shape?.bmp";
-        file[14] = (char) i + 49;
-        queue_textures[i] = SDL_LoadBMP(file);
-
-        if (!queue_textures[i])
-        {
-            write_log(SDL_GetError(), LOG_OUT_BOTH | LOG_TYPE_ERR);
-            exit(1);
-        }
-    }
-
-    return;
-}
 
 /*
 Unloads the textures in queue_textures
@@ -42,7 +21,7 @@ static void unload_queue_textures(void)
 {
     for (uint8_t i = 0; i < PIECE_SHAPES; i++)
     {
-        SDL_FreeSurface(queue_textures[i]);
+        SDL_DestroyTexture(queue_textures[i]);
     }
 
     return;
@@ -59,8 +38,7 @@ extern ui_element_t create_queue_box(uint8_t shape_id, uint16_t win_x, uint16_t 
 {
     ui_element_t queue_box;
 
-    queue_box.surface = queue_textures[shape_id];
-    queue_box.texture = SDL_CreateTextureFromSurface(game.renderer, queue_box.surface);
+    queue_box.texture = queue_textures[shape_id];
 
     if (!queue_box.texture)
     {
@@ -73,6 +51,31 @@ extern ui_element_t create_queue_box(uint8_t shape_id, uint16_t win_x, uint16_t 
     queue_box.rect.y = win_y;
 
     return queue_box;
+}
+
+/*
+Loads the texture files into the queue_textures array.
+*/
+extern SDL_Texture * load_texture(const char *file)
+{
+    SDL_Surface *tmp;
+    SDL_Texture *texture_out;
+    char full_path[50] = "Textures/\0";
+
+    strcat(full_path, file);
+    tmp = SDL_LoadBMP(full_path);
+
+    texture_out = SDL_CreateTextureFromSurface(game.renderer, tmp);
+
+    if (!texture_out)
+    {
+        write_log(SDL_GetError(), LOG_OUT_BOTH | LOG_TYPE_ERR);
+        exit(1);
+    }
+
+    SDL_FreeSurface(tmp);
+
+    return texture_out;
 }
 
 /*
@@ -192,5 +195,12 @@ extern void init_ui(void)
 
     write_log("TTF initialized", LOG_OUT_FILE | LOG_TYPE_INF);
 
-    load_queue_textures();
+    for (uint8_t i = 0; i < PIECE_SHAPES; i++)
+    {
+        char file[] = "Shape?.bmp";
+        file[5] = (char) i + 49;
+
+        queue_textures[i] = load_texture(file);
+    }
+    
 }
