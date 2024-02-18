@@ -6,7 +6,7 @@ This is a personal project to make a Tetris clone entirely in C using the SDL2 l
 
 - A/D - Move the active piece to the left/right
 - Q/R - Rotate the active piece clockwise/contra-clockwise
-- (Not Implemented) S - Increase the falling speed of the active piece 
+- S - Increase the falling speed of the active piece 
 
 ## How To Compile
 
@@ -30,4 +30,8 @@ Provided with the source code is also a Makefile which you should set to your pr
 - var.c - Holds all common global varibles and structs.
 - util.c - Defines common functions used in the program.
 - log.c - Initializes the logging system when starting the program. When initalized provides functions for outputing a formated string with the current time and a custom message to file and/or console.
-- text.c - Currently not implemented...
+- ui.c - Handles ui initialization, texture loading and unloading, and text creation.
+
+## Sources
+
+The font is [VCR OSD Mono](https://www.1001freefonts.com/vcr-osd-mono.font) by mrmanet.
