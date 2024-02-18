@@ -8,32 +8,11 @@
 #include "include/log.h"
 #include "include/game.h"
 
-#define FONT_SIZE 512   // Size of the font used by the ui
+#define FONT_SIZE 100   // Size of the font used by the ui
 
-SDL_Surface *queue_textures[PIECE_SHAPES];  // Array containing the textures for the queue
+SDL_Texture *queue_textures[PIECE_SHAPES];  // Array containing the textures for the queue
 
 static TTF_Font *ui_font;   // The font of the ui
-
-/*
-Loads the texture files into the queue_textures array.
-*/
-static void load_queue_textures(void)
-{
-    for (uint8_t i = 0; i < PIECE_SHAPES; i++)
-    {
-        char file[] = "Textures/Shape?.bmp";
-        file[14] = (char) i + 49;
-        queue_textures[i] = SDL_LoadBMP(file);
-
-        if (!queue_textures[i])
-        {
-            write_log(SDL_GetError(), LOG_OUT_BOTH | LOG_TYPE_ERR);
-            exit(1);
-        }
-    }
-
-    return;
-}
 
 /*
 Unloads the textures in queue_textures
@@ -42,7 +21,7 @@ static void unload_queue_textures(void)
 {
     for (uint8_t i = 0; i < PIECE_SHAPES; i++)
     {
-        SDL_FreeSurface(queue_textures[i]);
+        SDL_DestroyTexture(queue_textures[i]);
     }
 
     return;
@@ -59,8 +38,7 @@ extern ui_element_t create_queue_box(uint8_t shape_id, uint16_t win_x, uint16_t 
 {
     ui_element_t queue_box;
 
-    queue_box.surface = queue_textures[shape_id];
-    queue_box.texture = SDL_CreateTextureFromSurface(game.renderer, queue_box.surface);
+    queue_box.texture = queue_textures[shape_id];
 
     if (!queue_box.texture)
     {
@@ -76,6 +54,31 @@ extern ui_element_t create_queue_box(uint8_t shape_id, uint16_t win_x, uint16_t 
 }
 
 /*
+Loads the texture files into the queue_textures array.
+*/
+extern SDL_Texture * load_texture(const char *file)
+{
+    SDL_Surface *tmp;
+    SDL_Texture *texture_out;
+    char full_path[50] = "Textures/\0";
+
+    strcat(full_path, file);
+    tmp = SDL_LoadBMP(full_path);
+
+    texture_out = SDL_CreateTextureFromSurface(game.renderer, tmp);
+
+    if (!texture_out)
+    {
+        write_log(SDL_GetError(), LOG_OUT_BOTH | LOG_TYPE_ERR);
+        exit(1);
+    }
+
+    SDL_FreeSurface(tmp);
+
+    return texture_out;
+}
+
+/*
 Initializes a ui_element_t struct for displaying text.
 Parameters:
 message - The message to be displayed
@@ -84,13 +87,12 @@ win_x - The x coordinate of the box
 win_y - The y coordinate of the box
 text_size - The size of the text
 */
-extern ui_element_t create_text_box(const char *message, SDL_Color color, uint16_t win_x, uint16_t win_y, uint16_t text_size)
+extern ui_element_t create_text_box(const char *message, SDL_Color color, uint16_t win_x, uint16_t win_y, float scale)
 {
     ui_element_t text_box;
+    static uint8_t ui_id = 0;
 
     text_box.surface = TTF_RenderText_Solid(ui_font, message, color);
-
-    int ln_coef = (int)sqrt((float)strlen(message));    // Cursed
 
     if (!text_box.surface)
     {
@@ -106,12 +108,44 @@ extern ui_element_t create_text_box(const char *message, SDL_Color color, uint16
         exit(1);
     }
 
+    int ln_coef = strlen(message);//(int)sqrt((float)strlen(message));    // Cursed
+
     text_box.rect.x = win_x;
     text_box.rect.y = win_y;
-    text_box.rect.h = text_size;
-    text_box.rect.w = text_size * ln_coef;
+    text_box.rect.h = FONT_SIZE * scale;
+    text_box.rect.w = (ln_coef * FONT_SIZE / 2) * scale;
+
+    text_box.id = ui_id;
+
+    ui_id++;
 
     return text_box;
+}
+
+extern void refresh_text_box(ui_element_t *text_box, const char *message, SDL_Color color)
+{
+    assert(text_box);
+
+    SDL_FreeSurface(text_box->surface);
+    SDL_DestroyTexture(text_box->texture);
+
+    text_box->surface = TTF_RenderText_Solid(ui_font, message, color);
+    
+    if (!text_box->surface)
+    {
+        write_log(TTF_GetError(), LOG_OUT_BOTH | LOG_TYPE_ERR);
+        exit(1);
+    }
+
+    text_box->texture = SDL_CreateTextureFromSurface(game.renderer, text_box->surface);
+
+    if (!text_box->texture)
+    {
+        write_log(SDL_GetError(), LOG_OUT_BOTH | LOG_TYPE_ERR);
+        exit(1);
+    }
+
+    return;
 }
 
 /*
@@ -161,5 +195,12 @@ extern void init_ui(void)
 
     write_log("TTF initialized", LOG_OUT_FILE | LOG_TYPE_INF);
 
-    load_queue_textures();
+    for (uint8_t i = 0; i < PIECE_SHAPES; i++)
+    {
+        char file[] = "Shape?.bmp";
+        file[5] = (char) i + 49;
+
+        queue_textures[i] = load_texture(file);
+    }
+    
 }

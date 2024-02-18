@@ -16,6 +16,13 @@
 #define BLOCK_SIZE (PLAYING_FIELD_HEIGHT / 20)                       // Size of playing field blocks
 #define BLOCK_PADDING 2                                              // The size of padding beween blocks
 
+/*
+Sets the rendering color to the provided color struct.
+Parameters:
+col - The color which the render will switch to
+*/
+#define SetRenderColor(col) SDL_SetRenderDrawColor(game.renderer, col.r, col.g, col.b, col.a)
+
 typedef struct ui_element_node_t
 {
     ui_element_t text_box;
@@ -23,22 +30,14 @@ typedef struct ui_element_node_t
 }
 ui_element_node_t;
 
+static uint8_t score_text_id;
 static ui_element_node_t *text_elements = NULL;   // The first node in a single linked list used for storing text elements
+static SDL_Texture *block_textures[PIECE_SHAPES];
 static ui_element_t *queue_elements[QUEUE_LIMIT]; // Array containing the graphical info about the piece queue
 
 // TEMP
-static const SDL_Color WHITE = {.r = 255, .g = 255, .b = 255, .a = 255};
 static const SDL_Color BLACK = {.r = 0, .g = 0, .b = 0, .a = 255};
-
-/*
-Sets the rendering color to the provided color struct.
-Parameters:
-color - The color which the render will switch to
-*/
-static int8_t set_render_col(const SDL_Color color)
-{
-    return SDL_SetRenderDrawColor(game.renderer, color.r, color.g, color.b, color.a);
-}
+static const SDL_Color WHITE = {.r = 255, .g = 255, .b = 255, .a = 255};
 
 /*
 Adds a text element to the list.
@@ -50,19 +49,65 @@ win_x - The x coordinate of the text box
 win_y - The y coordinate of the text box
 text_size - The size of the text box
 */
-static void add_text_element(ui_element_node_t *element_pointer, const char *message, SDL_Color color, uint16_t win_x, uint16_t win_y, uint16_t text_size)
+static uint8_t add_text_element(ui_element_node_t *element_pointer, const char *message, SDL_Color color, uint16_t win_x, uint16_t win_y, float scale)
 {
     assert(element_pointer);
+
+    static uint8_t ui_id;
 
     if (!element_pointer->next)
     {
         element_pointer->next = calloc(1, sizeof(ui_element_node_t));
-        element_pointer->next->text_box = create_text_box(message, color, win_x, win_y, text_size);
-        return;
+        element_pointer->next->text_box = create_text_box(message, color, win_x, win_y, scale);
+        ui_id = element_pointer->next->text_box.id;
+        return 0;
     }
 
-    add_text_element(element_pointer->next, message, color, win_x, win_y, text_size);
+    add_text_element(element_pointer->next, message, color, win_x, win_y, scale);
     
+    return ui_id;
+}
+
+/*
+Transforms the score variable to char * and updates the score text.
+*/
+static void update_score_text(void)
+{
+    ui_element_node_t *element_pointer = text_elements;
+
+    while (element_pointer->text_box.id != score_text_id)
+    {
+        if (!element_pointer->next)
+        {
+            write_log("Score text box id not found", LOG_OUT_BOTH | LOG_TYPE_ERR);
+            exit(1);
+        }
+
+        element_pointer = element_pointer->next;
+    }
+
+    char score_composite[11];
+
+    for (uint8_t i = 0; i < 10; i++)
+    {
+        score_composite[i] = 48;
+    }
+
+    score_composite[10] = 0;
+
+    char score_str[10];
+
+    uint8_t score_len = snprintf(NULL, 0, "%u", score);
+
+    sprintf(score_str, "%u", score);
+
+    for (uint8_t i = 0; i < score_len; i++)
+    {
+        score_composite[9 - i] = score_str[(score_len - 1) - i];
+    }
+
+    refresh_text_box(&element_pointer->text_box, score_composite, WHITE);
+
     return;
 }
 
@@ -75,7 +120,7 @@ static void update_queue_list(void)
     {
         if (queue_elements[i])
         {
-            SDL_DestroyTexture(queue_elements[i]->texture);
+            // SDL_DestroyTexture(queue_elements[i]->texture);
             free(queue_elements[i]);
         }
         queue_elements[i] = calloc(1, sizeof(ui_element_t));
@@ -87,6 +132,16 @@ static void update_queue_list(void)
         }
 
         *queue_elements[i] = create_queue_box(piece_queue[i]->shape_id, PLAYING_FIELD_X + PLAYING_FIELD_WIDTH + 10, PLAYING_FIELD_Y + 50 * (i + 1));
+    }
+
+    return;
+}
+
+static void unload_block_textures(void)
+{
+    for (uint8_t i = 0; i < PIECE_SHAPES; i++)
+    {
+        SDL_DestroyTexture(block_textures[i]);
     }
 
     return;
@@ -111,8 +166,6 @@ static void render_block_array(const uint16_t field_x, const uint16_t field_y)
                 continue;
             }
 
-            set_render_col(playing_field[i][j].color);
-
             SDL_Rect block_rect = 
             {
             .h = BLOCK_SIZE - BLOCK_PADDING,
@@ -121,9 +174,7 @@ static void render_block_array(const uint16_t field_x, const uint16_t field_y)
             .y = field_y + i * BLOCK_SIZE - BLOCK_SIZE * 2
             };
 
-            SDL_RenderFillRect(game.renderer, &block_rect);
-
-            SDL_RenderDrawRect(game.renderer, &block_rect);
+            SDL_RenderCopy(game.renderer, block_textures[playing_field[i][j].texture_id], NULL, &block_rect);
         }
     }
 
@@ -146,7 +197,7 @@ static void render_playing_field(uint16_t pos_x, uint16_t pos_y)
 
     render_block_array(pos_x, pos_y + offset_y);
 
-    SDL_SetRenderDrawColor(game.renderer, 255, 255, 255, 255);
+    SetRenderColor(WHITE);
 
     SDL_RenderDrawRect(game.renderer, &rect);
 
@@ -159,6 +210,8 @@ Renders the ui elements contained in text_elements and queue_elements.
 static void render_ui(void)
 {
     ui_element_node_t *element_pointer = text_elements;
+
+    update_score_text();
 
     while (element_pointer)
     {
@@ -213,16 +266,15 @@ extern void render_frame(void)
 
     render_ui();
 
-    set_render_col(WHITE);
-
 #ifdef UI_GUIDES
 
+    SetRenderColor(WHITE);
     SDL_RenderDrawLine(game.renderer, WINDOW_WIDTH / 2, 0, WINDOW_WIDTH / 2, WINDOW_HEIGHT);
     SDL_RenderDrawLine(game.renderer, 0, WINDOW_HEIGHT / 2, WINDOW_WIDTH, WINDOW_HEIGHT / 2);
 
 #endif
 
-    set_render_col(BLACK);
+    SetRenderColor(BLACK);
 
     SDL_RenderPresent(game.renderer);
 
@@ -254,11 +306,18 @@ extern void init_output(void)
 
     write_log("Game renderer and window created", LOG_OUT_FILE | LOG_TYPE_INF);
 
+    for (uint8_t i = 0; i < PIECE_SHAPES; i++)
+    {
+        char file[] = "Block?.bmp";
+        file[5] = (char) i + 49;
+
+        block_textures[i] = load_texture(file);
+    }
+
     text_elements = calloc(1, sizeof(ui_element_node_t));
 
-    add_text_element(text_elements, "TetriC v0.3", WHITE, 1000, 680, 25);
-    add_text_element(text_elements, "Score", WHITE, WINDOW_WIDTH / 2 - 40, 60, 40);
-    add_text_element(text_elements, "000000000", WHITE, WINDOW_HEIGHT / 4 + 8, 100, 55);
+    add_text_element(text_elements, "Score", WHITE, WINDOW_WIDTH / 3 + 34, 55, 0.45);
+    score_text_id = add_text_element(text_elements, "000000000", WHITE, WINDOW_HEIGHT / 4 - 22, 100, 0.5);
 
     return;
 }
@@ -268,6 +327,8 @@ Unloads resources used by the output system.
 */
 extern void unload_output(void)
 {
+    unload_block_textures();
+
     free_element_list(text_elements);
 
     unload_ui();

@@ -127,7 +127,7 @@ extern void init_log(void)
         exit(1);
     }
 
-    write_log("Start log...", LOG_OUT_FILE | LOG_TYPE_INF);
+    write_log("Start log", LOG_OUT_FILE | LOG_TYPE_INF);
 
     return;
 }

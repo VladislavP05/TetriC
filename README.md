@@ -31,3 +31,7 @@ Provided with the source code is also a Makefile which you should set to your pr
 - util.c - Defines common functions used in the program.
 - log.c - Initializes the logging system when starting the program. When initalized provides functions for outputing a formated string with the current time and a custom message to file and/or console.
 - ui.c - Handles ui initialization, texture loading and unloading, and text creation.
+
+## Sources
+
+The font is [VCR OSD Mono](https://www.1001freefonts.com/vcr-osd-mono.font) by mrmanet.
