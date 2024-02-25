@@ -13,6 +13,7 @@ typedef struct
     SDL_Renderer *renderer;
     SDL_Window *window;
     bool is_closed;           // True when game is running and set to false when SDL_Quit event is called
+    bool is_playing;
 }
 Game_t;
 

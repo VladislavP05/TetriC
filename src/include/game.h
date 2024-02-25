@@ -25,6 +25,8 @@ rotate_direction_t;
 typedef struct
 {
     bool is_block;
+    bool is_ghost;
+    bool is_static;
     uint8_t texture_id;
 }
 Block_t;

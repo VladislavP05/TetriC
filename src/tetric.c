@@ -5,13 +5,14 @@
 
 #include <time.h>
 
-#include "include/var.h"
-#include "include/util.h"
-#include "include/log.h"
-#include "include/tetric.h"
-#include "include/input.h"
-#include "include/output.h"
-#include "include/game.h"
+#include "var.h"
+#include "util.h"
+#include "log.h"
+#include "tetric.h"
+#include "input.h"
+#include "output.h"
+#include "ui.h"
+#include "game.h"
 
 #define TARGET_FRAME_TIME (1000 / FPS)          // Time between each frame
 

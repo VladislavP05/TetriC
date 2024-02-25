@@ -15,7 +15,7 @@ extern SDL_Texture * load_texture(const char *file);
 
 extern ui_element_t create_text_box(const char *message, SDL_Color color, uint16_t win_x, uint16_t win_y, float scale);
 
-extern void refresh_text_box(ui_element_t *text_box, const char *message, SDL_Color color);
+extern void refresh_text_box(ui_element_t *text_box, const char *message, uint16_t cord_x, uint16_t cord_y, SDL_Color color);
 
 extern ui_element_t create_queue_box(uint8_t shape_id, uint16_t win_x, uint16_t win_y);
 

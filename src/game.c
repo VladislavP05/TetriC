@@ -5,10 +5,10 @@ Initializes the game playing field and piece queue. Defines the piece move, rota
 Unloads the piece queue when the exit function is called.
 */
 #include <stdlib.h>
-#include "include/var.h"
-#include "include/util.h"
-#include "include/game.h"
-#include "include/log.h"
+#include "var.h"
+#include "util.h"
+#include "game.h"
+#include "log.h"
 
 // Array containing the available shapes to be chosen during piece creation. The first index is the id of that shape
 static const uint8_t shapes[PIECE_SHAPES][3][3] = 
@@ -25,6 +25,7 @@ static const uint8_t shapes[PIECE_SHAPES][3][3] =
 // Game tick counter. Resets every second (ticks % FPS)
 static uint8_t ticks;
 static float score_multiplier = 1.0f;
+static float time_multiplier = 1.0f;
 
 // Array containing the next pieces to be spawned. When the spawn_piece function is called, the first piece in the queue
 // gets set as the active piece and removed from the queue, then the queue shifts its elements to i - 1 and initializes the last
@@ -89,6 +90,8 @@ static void check_lines(void)
     }
 
     score += (50 * score_multiplier) * line_num;
+    score_multiplier += 0.1f * line_num;
+    time_multiplier -= time_multiplier >= 0.5 ? 0.01 * line_num : 0;
 
     clear_lines(line_idx, line_num);
 
@@ -248,10 +251,66 @@ static void swap_blocks(active_piece_t *this)
             if (this->shape[y_offset + 1][x_offset + 1] != 1) {continue;}
 
             playing_field[this->cord_y + y_offset][this->cord_x + x_offset].is_block = true;
-            playing_field[this->cord_y + y_offset][this->cord_x + x_offset].texture_id = active_piece.shape_id; 
+            playing_field[this->cord_y + y_offset][this->cord_x + x_offset].texture_id = active_piece.shape_id + 1; 
 
         }
     }
+}
+
+static void show_ghost(void)
+{
+    for (uint8_t i = 0; i < 22; i++)
+    {
+        for (uint8_t j = 0; j < 12; j++)
+        {
+            playing_field[i][j].is_ghost = false;
+        }
+    }
+
+    active_piece_t ghost;
+
+    ghost.cord_x = active_piece.cord_x;
+    ghost.cord_y = active_piece.cord_y;
+    ghost.shape_id = active_piece.shape_id;
+    memcpy(ghost.shape, active_piece.shape, sizeof(active_piece.shape));
+
+    ghost.move_direction = M_DOWN;
+
+    while (true)
+    {
+        if (check_move(&ghost))
+        {
+            break;
+        }
+
+        ghost.cord_y++;
+    }
+
+    for (uint8_t i = 0; i < 3; i++)
+    {
+        for (uint8_t j = 0; j < 3; j++)
+        {
+            if (ghost.shape[i][j])
+            {
+                playing_field[ghost.cord_y + (i - 1)][ghost.cord_x + (j - 1)].is_ghost = true;
+            }
+        }
+    }
+    
+    return;
+}
+
+static void check_game_over(void)
+{
+    for (uint8_t i = 0; i < 12; i++)
+    {
+        if (playing_field[2][i].is_static)
+        {
+            game.is_playing = false;
+        }
+    }
+
+    return;
 }
 
 /*
@@ -438,7 +497,7 @@ static void rotate_blocks(active_piece_t *this)
             if (this->shape[y_offset + 1][x_offset + 1] != 1) {continue;}
 
             playing_field[this->cord_y + y_offset][this->cord_x + x_offset].is_block = true;
-            playing_field[this->cord_y + y_offset][this->cord_x + x_offset].texture_id = active_piece.shape_id; 
+            playing_field[this->cord_y + y_offset][this->cord_x + x_offset].texture_id = active_piece.shape_id + 1; 
 
         }
     }
@@ -511,7 +570,7 @@ static void spawn_next_piece()
 
     populate_piece_queue();
 
-    active_piece.cord_x = 5; active_piece.cord_y = 2;
+    active_piece.cord_x = 5; active_piece.cord_y = 1;
     active_piece.move_direction = M_NONE;
     active_piece.move = move_piece;
     active_piece.rotate = rotate_piece;
@@ -522,8 +581,8 @@ static void spawn_next_piece()
         {
             if (!active_piece.shape[y_offset][x_offset]) {continue;}
 
-            playing_field[2 + (y_offset - 1)][5 + (x_offset - 1)].texture_id = active_piece.shape_id;
-            playing_field[2 + (y_offset - 1)][5 + (x_offset - 1)].is_block = true;
+            playing_field[1 + (y_offset - 1)][5 + (x_offset - 1)].texture_id = active_piece.shape_id + 1;
+            playing_field[1 + (y_offset - 1)][5 + (x_offset - 1)].is_block = true;
         }
     }
 }
@@ -551,10 +610,35 @@ extern void tick_logic(void)
 
     ticks++;
 
-    if (!(ticks % FPS == 0)) {return;}
+    show_ghost();
+
+    if (ticks % FPS + 1 < (int) FPS * time_multiplier)
+    {
+        return;
+    }
 
     if (active_piece.move(&active_piece, M_DOWN))
     {
+        for (int8_t y_offset = -1; y_offset < 2; y_offset++)
+        {
+            for (int8_t x_offset = -1; x_offset < 2; x_offset++)
+            {
+                if (!active_piece.shape[y_offset + 1][x_offset + 1])
+                {
+                    continue;
+                }
+
+                playing_field[active_piece.cord_y + y_offset][active_piece.cord_x + x_offset].is_static = true;
+            }
+        }
+
+        check_game_over();
+
+        if (!game.is_playing)
+        {
+            return;
+        }
+
         check_lines();
         check_lines();      // In case of disconnected full lines. Not very efficient \/('_')\/
         spawn_next_piece(); // TEST
@@ -570,8 +654,6 @@ Initializes the playing field and piece queue. Called once at the start
 */
 extern void start_game(void)
 {
-    // Test implementation
-
     static_assert(QUEUE_LIMIT < 9, "Piece limit should be lower than 9");
     static_assert(PIECE_SHAPES == 7, "Change if you want to add more shapes. You have to define the shape and color in the respective arrays.");
 
@@ -582,12 +664,17 @@ extern void start_game(void)
         for (int j = 0; j < 12; j++)
         {
             playing_field[i][j].is_block = false;
+            playing_field[i][j].is_ghost = false;
+            playing_field[i][j].is_ghost = false;
             playing_field[i][j].texture_id = 0;
         }
     }
 
     populate_piece_queue();
     write_log("Piece queue initialized", LOG_TYPE_INF | LOG_OUT_FILE);
+
+    game.is_playing = true;
+
     spawn_next_piece();
 }
 

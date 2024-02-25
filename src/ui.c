@@ -3,10 +3,10 @@
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_ttf.h>
 
-#include "include/ui.h"
-#include "include/var.h"
-#include "include/log.h"
-#include "include/game.h"
+#include "ui.h"
+#include "var.h"
+#include "log.h"
+#include "game.h"
 
 #define FONT_SIZE 100   // Size of the font used by the ui
 
@@ -122,7 +122,7 @@ extern ui_element_t create_text_box(const char *message, SDL_Color color, uint16
     return text_box;
 }
 
-extern void refresh_text_box(ui_element_t *text_box, const char *message, SDL_Color color)
+extern void refresh_text_box(ui_element_t *text_box, const char *message, uint16_t cord_x, uint16_t cord_y, SDL_Color color)
 {
     assert(text_box);
 
@@ -144,6 +144,9 @@ extern void refresh_text_box(ui_element_t *text_box, const char *message, SDL_Co
         write_log(SDL_GetError(), LOG_OUT_BOTH | LOG_TYPE_ERR);
         exit(1);
     }
+
+    text_box->rect.x = cord_x;
+    text_box->rect.y = cord_y;
 
     return;
 }

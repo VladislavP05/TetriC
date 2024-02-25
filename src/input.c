@@ -2,9 +2,9 @@
 
 // Handles program inputs.
 
-#include "include/var.h"
-#include "include/input.h"
-#include "include/game.h"
+#include "var.h"
+#include "input.h"
+#include "game.h"
 
 extern void handle_input(void)
 {
@@ -12,13 +12,19 @@ extern void handle_input(void)
 
     while (SDL_PollEvent(&event))
     {
+        if (event.type == SDL_QUIT)
+        {
+            game.is_closed = true;
+            break;
+        }
+
+        if (!game.is_playing)
+        {
+            break;
+        }
+
         switch (event.type)
         {
-            case SDL_QUIT:
-
-                game.is_closed = true;
-                break;
-        
             case SDL_KEYDOWN:
 
                 switch (event.key.keysym.sym)
@@ -50,4 +56,6 @@ extern void handle_input(void)
                 }
         }
     }
+
+    return;
 }

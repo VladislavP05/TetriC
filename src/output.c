@@ -2,12 +2,12 @@
 
 // Rendering of the program.
 
-#include "include/var.h"
-#include "include/util.h"
-#include "include/output.h"
-#include "include/log.h"
-#include "include/game.h"
-#include "include/ui.h"
+#include "var.h"
+#include "util.h"
+#include "output.h"
+#include "log.h"
+#include "game.h"
+#include "ui.h"
 
 #define PLAYING_FIELD_WIDTH 300                                      // The playing field width in pixels
 #define PLAYING_FIELD_HEIGHT 500                                     // The playing field height in pixels
@@ -31,8 +31,9 @@ typedef struct ui_element_node_t
 ui_element_node_t;
 
 static uint8_t score_text_id;
+static uint8_t gameover_text_id;
 static ui_element_node_t *text_elements = NULL;   // The first node in a single linked list used for storing text elements
-static SDL_Texture *block_textures[PIECE_SHAPES];
+static SDL_Texture *block_textures[PIECE_SHAPES + 1];
 static ui_element_t *queue_elements[QUEUE_LIMIT]; // Array containing the graphical info about the piece queue
 
 // TEMP
@@ -106,7 +107,7 @@ static void update_score_text(void)
         score_composite[9 - i] = score_str[(score_len - 1) - i];
     }
 
-    refresh_text_box(&element_pointer->text_box, score_composite, WHITE);
+    refresh_text_box(&element_pointer->text_box, score_composite, element_pointer->text_box.rect.x, element_pointer->text_box.rect.y,  WHITE);
 
     return;
 }
@@ -139,10 +140,27 @@ static void update_queue_list(void)
 
 static void unload_block_textures(void)
 {
-    for (uint8_t i = 0; i < PIECE_SHAPES; i++)
+    for (uint8_t i = 0; i < PIECE_SHAPES + 1; i++)
     {
         SDL_DestroyTexture(block_textures[i]);
     }
+
+    return;
+}
+
+static void load_block_textures(void)
+{
+    for (uint8_t i = 0; i < PIECE_SHAPES + 1; i++)
+    {
+        char file[] = "Block?.bmp";
+        file[5] = (char) i + 48;
+
+        block_textures[i] = load_texture(file);
+    }
+
+    // Makes the ghost texture semi-transparent
+    SDL_SetTextureBlendMode(block_textures[0], SDL_BLENDMODE_BLEND);
+    SDL_SetTextureAlphaMod(block_textures[0], 128);
 
     return;
 }
@@ -161,7 +179,7 @@ static void render_block_array(const uint16_t field_x, const uint16_t field_y)
     {
         for (int j = 0; j < 12; j++)
         {
-            if (!playing_field[i][j].is_block)
+            if (!playing_field[i][j].is_block && !playing_field[i][j].is_ghost)
             {
                 continue;
             }
@@ -216,6 +234,12 @@ static void render_ui(void)
     while (element_pointer)
     {
         SDL_RenderCopy(game.renderer, element_pointer->text_box.texture, NULL, &element_pointer->text_box.rect);
+
+        if (!game.is_playing && element_pointer->text_box.id == gameover_text_id)
+        {
+            refresh_text_box(&element_pointer->text_box, "Game Over!", 100, element_pointer->text_box.rect.y, WHITE);
+        }
+
         element_pointer = element_pointer->next;
     }
     
@@ -302,22 +326,19 @@ extern void init_output(void)
         exit(1);
     }
 
+    write_log("Game renderer and window created", LOG_OUT_FILE | LOG_TYPE_INF);
+    
     init_ui();
 
-    write_log("Game renderer and window created", LOG_OUT_FILE | LOG_TYPE_INF);
-
-    for (uint8_t i = 0; i < PIECE_SHAPES; i++)
-    {
-        char file[] = "Block?.bmp";
-        file[5] = (char) i + 49;
-
-        block_textures[i] = load_texture(file);
-    }
+    load_block_textures();
 
     text_elements = calloc(1, sizeof(ui_element_node_t));
 
     add_text_element(text_elements, "Score", WHITE, WINDOW_WIDTH / 3 + 34, 55, 0.45);
+    gameover_text_id = add_text_element(text_elements, "Game Over!", WHITE, 1000, WINDOW_HEIGHT / 2 - 40, 0.75);
     score_text_id = add_text_element(text_elements, "000000000", WHITE, WINDOW_HEIGHT / 4 - 22, 100, 0.5);
+
+    write_log("UI resources created", LOG_OUT_FILE | LOG_TYPE_INF);
 
     return;
 }
@@ -332,6 +353,8 @@ extern void unload_output(void)
     free_element_list(text_elements);
 
     unload_ui();
+
+    write_log("UI resoureces unloaded", LOG_OUT_FILE | LOG_TYPE_INF);
 
     SDL_DestroyRenderer(game.renderer);
 

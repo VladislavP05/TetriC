@@ -2,9 +2,9 @@
 
 // Defines global functions in the program
 
-#include "../include/util.h"
-#include "../include/var.h"
-#include "../include/log.h"
+#include "util.h"
+#include "var.h"
+#include "log.h"
 
 extern void swap(void *var1, void *var2, size_t size)
 {
