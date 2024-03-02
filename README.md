@@ -6,9 +6,14 @@ This is a personal project to make a Tetris clone entirely in C using the SDL2 l
 
 ### Debian:
 
-1. Download and unpack the .zip file
+1. Download and unpack the Tetric.zip file
 2. Run the `sdlInstall.sh` file
 3. You can now run the program from the Tetric file
+
+### Windows:
+
+1. Download and unpack the TetricWin.zip file
+2. Run the program from the Tetric.exe file
   
 ## Controls
 
