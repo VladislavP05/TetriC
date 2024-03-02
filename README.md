@@ -2,6 +2,14 @@
 
 This is a personal project to make a Tetris clone entirely in C using the SDL2 library.
 
+## Installation
+
+### Debian:
+
+1. Download and unpack the .zip file
+2. Run the `sdlInstall.sh` file
+3. You can now run the program from the Tetric file
+  
 ## Controls
 
 - A/D - Move the active piece to the left/right
@@ -10,8 +18,8 @@ This is a personal project to make a Tetris clone entirely in C using the SDL2 l
 
 ## How To Compile
 
-All source code was written with linux in mind but it should be able to compile on Windows aswell. The only requirements are that you have installed and set up SDL2 on your PC.
-Provided with the source code is also a Makefile which you should set to your preferred compiler and change the flags as needed.
+All source code was written with Linux in mind but it should compile on Windows as well. The requirements for the program to compile are `SDL2-dev` `SDL2_image-dev` `SDL2_ttf-dev`.
+They can be installed from your distro's package manager.
 
 ### File Structure
 
